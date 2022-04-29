@@ -22,7 +22,7 @@
 #define METHANE_ERROR3 "Soil methane concentration > 5.0e5"
 #define MAXSOILCH4 5.0e5
 //#define CONVCH4CTOKGC 0.012011 // based on moles CH4
-#define CONVCH4CTOKGC 1.2011e-5   // based on millimoles CH4
+#define CONVCH4CTOKGC 1.2011e-5   // conversion from millimoles CH4-C to kg C
 
 
 /************************ GLOBAL VARIABLES ***********************************/
@@ -80,6 +80,7 @@ extern int ProductionModel;                  // Production model: 0 for simple s
 extern double CurrentLAI;               // leaf area index
 extern double MinProd;                   // Minimum primary productivity
 extern Matrix TData;                      // Air temperature data from file Tfile
+extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
 /******************** FUNCTION DEFINITIONS ***********************************/
 
 void Methane();

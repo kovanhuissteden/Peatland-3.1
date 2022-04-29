@@ -277,19 +277,19 @@ Matrix CarbonBalance;                   // Carbon balance: primary production, C
  * 4-10: Changes in each soil carbon reservoir
  * 11: total CO2-C emission fom aerobic decomposition
  * 12: CO2-C from above-ground litter decomposition
- * 13: toatc CO2-C from anaerobic decomposition
- * 14: total CH4-C emission
- * 15: CO2-C from CH4 oxidation
- * 16: CO2-C from plant respiration
- * 17: (not yet implemented) storage change (anaerobic) CO2 in soil water
- * 18: storage change CH4 in soil water 
- * 19: (not yet implemented) CO2 - and CH4-change export by groundwater flow
- * 20: harvest
- * 21: grazing
- * 22: above-ground biomass senescence
- * 23: below-ground biomass senescence
- * 24: storage change above-ground biomass
- * 25: storage change below ground biomass
+ * 13: total CH4-C emission
+ * 14: CO2-C from CH4 oxidation
+ * 15: CO2-C from plant respiration
+ * 16: (not yet implemented) storage change (anaerobic) CO2 in soil water
+ * 17: storage change CH4 in soil water 
+ * 18: (not yet implemented) CO2 - and CH4-change export by groundwater flow
+ * 19: harvest
+ * 20: grazing
+ * 21: above-ground biomass senescence
+ * 22: below-ground biomass senescence
+ * 23: storage change above-ground biomass
+ * 24: storage change below ground biomass
+ * 25: balance sum
  */
 
 

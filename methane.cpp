@@ -82,12 +82,12 @@ void Methane()
 */
   int i, j, nsteps, a;
   double dtfac, dt, dth, ebullflux = 0.0, plantflux = 0.0, plantox = 0.0, rho, next, prev, topflux, sc, part, ttime, methair, mressum;
-  Matrix CH4oxidation, cres, cresstart, va, diff, cc, ccn, dc, totprod, ebullrate, plantrate, prod, CO2production, totalCO2, anaerobCO2, Closs, mp;
+  Matrix CH4oxidation, cres, cresstart, va, diff, cc, ccn, ccstart, dc, totprod, ebullrate, plantrate, prod, CO2production, totalCO2, anaerobCO2, Closs, mp;
 
 // ALL CALCULATIONS IN MILLIMOLES 
  
   MethaneFlux.Fill(0.0);                  // methane flux totalled per time step
-  Closs.Resize(NrLayers, NrReservoirs);   // carbon loss from reservoirs in kg C
+  Closs.Resize(NrLayers, NrReservoirs);   // carbon loss from reservoirs in millimoles C in layer volume
   CH4oxidation.Resize(NrLayers);          // logs oxygen consumption by methane oxidation in milliomoles/layer
                                           // for later use if O2 diffusion is added to the model
   CO2production.Resize(NrLayers);         // logs all CO2 derived from methane oxidation millimoles/layer
@@ -117,6 +117,7 @@ void Methane()
   dth = dt * 24.0;                         // PDE timestep in hours for ebullition rate. plant flux and production
   ttime = 0.5 * dt;			               // time in days since start of model time step for calculation of rapid saturation depression of methane production
   cc = MethProfile;                        // cc, ccn: intermediate results methane concentration profile during diff equation solution iteration
+  ccstart = MethProfile;                   // soil CH4 concentration at start of time step, for calculation of storage change
   mp.Resize(NrLayers);                     // CH4 concentration in millimol CH4 per layer volume
   dc.Resize(NrLayers);                     // dc: intermediate variable to calculate ebullition. plant flux, production per time step
   ccn.Resize(NrLayers);                    //  ccn: summed plant flux, ebullition, production
@@ -174,19 +175,22 @@ void Methane()
   }
   // handle C loss from reservoirs; all data of CO2 and CH4 production remains in millimoles but for substraction of C reservoirs is converted to kg C 
   Closs =  cresstart - cres;
+  for (i = 1; i <= NrReservoirs; i++) CarbonBalance(StepNr, i + 3) -= Closs.SumCol(i) / 1000.0;  // store in CarbonBalance as moles C
   Closs *= CONVCH4CTOKGC;
   NewSOM -= Closs;  // update carbon reservoir size by subtracting C lost by CH4 production
   // anarobicCO2 and CO2production from oxidation also have to be added proberly to total anaerobc CO2 and CO2 from methane
   // this is done in function CollectCO2(); CO2 from oxidation is added to top layer
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Add these also as seprate entries in carbon balance- TO BE CONSTRUCTED
-  CO2FromMethane = totalCO2 * CONVCH4CTOKGC;                     // CO2 evolved from methane oxidation, convert from micromol CH4 to kg C
+  CarbonBalance(StepNr, 14) = totalCO2.Sum() / 1000.0;   // add oxidized CH4 to carbon balance tracking
+  CO2FromMethane = totalCO2 * CONVCH4CTOKGC;                     // CO2 evolved from methane oxidation, convert from millimol CH4 to kg C
+  CarbonBalance(StepNr, 11) += anaerobCO2.Sum() / 1000.0;   // add anaerobically generated CO2 to carbon balance tracking; has to add up to non-CH4 anaerobic production
   AnaerobSum += anaerobCO2 * CONVCH4CTOKGC;
-  // CH4oxidation kept in millimoles C per layerfor the time being convert
+  CarbonBalance(StepNr, 13) = MethaneFlux.Sum() / 1000.0;
   MethaneFlux *= MOLWEIGHTCH4 / (24 * Timestep);             // conversion from millimoles per timestep to mg per hr
   TotalMethane.PutData(StepNr, 2, MethaneFlux);                     // store current flux in result array
   TotalMethane(StepNr, 1) = DayNr;
   TotalMethane(StepNr, 5) = MethaneFlux.Sum();
   // convert methane profile back to millimol/m3 in soil pore volume
+  CarbonBalance(StepNr, 17) = ((MethProfile.Sum() - ccstart.Sum()) /1000.0) / LayerThickness; // CH4 soil storage change; + is increase; conversion from millimol/m3 the summed mol over layers
   mp = (MethProfile / PoreVol) / LayerThickness;
   if (ProfileOutput.Contains(3)) mp.Write(output3);        // write methane profile to output file if required
 }   // end Methane
