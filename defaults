@@ -1,0 +1,240 @@
+% DEFAULTS -  FIXED AND DEFAULT PARAMETERS OF PEATLAND
+%
+% Part of PEATLAND WETLAND PEAT SOIL CARBON FLUX MODEL
+%
+% This script sets the fixed parameters (physical constants, model configuration) and default parameters
+% for PEATLAND
+% The fixed parameters are set in the first section, default parameters in the second
+% Default parameters can be overridden by declaration in the site-specific parameter files
+%
+%
+% author J. van Huissteden
+% Vrije Universiteit, Faculty of Earth and Life Sciences
+% Dept. of Environmental GeoSciences
+% Last changes: April 2003
+% fixed parameters and global declarations for peat model
+
+% SOM reservoirs:
+% 1: peat; ALWAYS ASSUMED TO BE THE 1ST RESERVOIR
+% 2: dissolved organic matter manure
+% 3: manure solids
+% 4: root exudates
+% 5: litter and roots
+% 6: microbial biomass
+% 7: humus; ALWAYS ASSUMED TO BE THE LAST RESERVOIR
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FIXED PARAMETER SECTION - DO NOT CHANGE THIS UNLESS YOU HAVE GOOD REASONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% MODEL CONFIGURATION
+
+NrLayers = 15;          % number of layers in soil profile
+LayerThickness = 0.1;   % layer thickness
+TStepHeat = 0.01;       % time step (days) temperature model
+DStepHeat = 0.1;        % minimum depth step (m) temperature model
+MaxDepthHeat = 3.0;     % maximum depth temperature model (m)
+Timestep = 1;           % time step (days) value 1-10
+NrOfSteps = 365;        % number of time steps
+StartDay = 1;           % Julian day nr starting day
+StartYear = 1900;       % starting year to calculate leap years 
+ThermModel = 0;         % choice of soil thermal model:
+                        % 0 for diffusivity varying with layer physical properties
+                        % 1 for constant diffusivity
+                        % 2 for constant temperature model
+
+% PHYSICAL CONSTANTS
+
+DensOrg = 1200;                 % density organic matter in peat kg m-3
+DensMin = 2650;                 % density of mineral matter kg m-3
+DensWater = 1000;               % density of water at 0 degr C
+DensIce = 917;                  % density of ice at 0 degr C
+HCOrg = 2.496e6;                % volumetric heat capacity organic matter J.m-3.K-1
+HCMiner = 2.385e6;              % volumetric heat capacity mineral matter
+HCAir = 1.212e3;                % volumetric heat capacity air (saturated with water vapour)
+HCWater = 4.18e6;               % volumetric heat capacity water
+HCIce = 1.9257e6;               % volumetric heat capacity ice
+CondOrg = 0.25;                 % thermal conductivity organic matter J.m-1.s-1.K-1 = W m-1 K-1
+CondMiner = 2.5;                % thermal conductivity mineral matter (this is for clay, use for sand 8.8 which is the conductivity for quartz)
+CondQuartz = 8.0;				% thermal conductivity quartz (for sand fraction)
+CondAir = 0.025;                % thermal conductivity air
+CondWater = 0.56;               % thermal conductivity water
+CondIce = 2.21;                 % thermal conductivity ice
+CondSnow = 0.35;                % thermal conductivity snowpack (density ~ 350 kg m-3, see Williams & Smith 1991, p. 110)
+LatentHeat = [-0.0125, 1.955, 333.5];   % parameters for approximation of temperature-dependentlatent heat of fusion of ice J kg-1
+% LatentHeat = 334000;            % latent heat of fusion of ice J kg-1
+Rgas = 8.314;                   % Gas constant
+MethaneDiff = 1.7280;           % diffusivity of methane in air in m2/d
+MethaneDiffWater = 1.7280e-4;   % diffusion of methane in water
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEFAULT PARAMETER SETTINGS
+% DEFAULT PARAMETERS MAY BE OVERRIDDEN IN SITE-SPECIFIC PARAMETER FILES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% PARAMETERS AEROBIC SOM DECOMPOSITION
+AssimDissim = 2.3;                              % Assimiltion/Dissimilation ratio
+ResistFrac = 0.1;                               % Fraction of decomposited organic material that is transferred to resistant humus fraction
+MolAct = 74826;                                 % molecular activation energy aerobic organic matter decomposition
+% this means a Q10 value of 2.96, can be computed from Q10 values according to: MolAct = -8314 ln Q10 / (1/(Tref+273)-1/(T+273))
+Cfrac = [0.55 , 0.38 0.38 0.38 0.38 0.38 0.55]; % Carbon fraction (kg/kg) each SOM reservoir
+pFpoints = [2.7 4.2; 1 0.2];                    % curve for determining environmental correction factor for dryness
+HalfSatPoint = 0.1;                             % half activity saturation point for correction factor aeration
+RootAeration = 0;                               % Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
+PrimingCorrection = 0;                          % Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
+Kdecay = [0.02 100 4 365 4 365 0.005];          % SOM decomposition constants for each reservoir
+KPeatCN = [0.016 0.00021];                      % constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
+AnaerobicCO2 = 1;                               % Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
+KAnaerobic = [0.005 0.01 0.01 0.01 0.01 0.01 0.0001]; % Anaerobic decomposition constants, for all SOM reservoirs
+Q10Anaerobic = 3.5;                             % Q10 anaerobic decomposition
+KLitter = 0.5;                                  % Decomposition constant for standing dead biomass and above-ground litter
+
+% PARAMETERS ORGANIC MATTER PRODUCTION
+
+ProductionModel = 2;                    % Production model:
+                                        % 0 for simple sinusoidal function;
+                                        % 1 for production dependent on temperature of upper soil layer
+                                        % 2 for production data read from file, variable NPPFile has to be defined
+                                        % 3 for photosynthesis model, PAR data supplied in PARFile (Joule cm-2)
+                                        % 4 for photosynthesis model, cloud cover data supplied in PARFile (fractions 0 - 1), PAR calculated, variable Latitude defined
+                                        % 5 for photosynthesis model for tundra, Shaver et al, J. Ecology 2007 (not depending on CO2 concentration) PAR data supplied in PARFile (W m-2)
+                                        % 6 for photosynthesis model for tundra, Shaver et al, J. Ecology 2007 (not depending on CO2 concentration) cloud cover data supplied in PARFile
+NPPFile = "";                           % external file for net primary productivity
+PARFile = "";                           % file with incoming solar radiation data (J cm-2) or cloud cover data for ProductionModel model 3 or 4
+Latitude = 50.0;                        % site latitude for ProductionModel 4
+Phenology = [1 10.0 150 2.0 1 0.9 30 240];     % Phenology parameters production model 3 to 6; first number is type of phenology (0 for evergreen, 1 for summergreen)
+                                        % second is the base for calculating the heat sum (growing degree days) third the heat sum when maximum leaf area index
+                                        % is reached, fourth the maximum LAI, fifth C3 or C4 photosynthesis (1 or 2). sixth number is fraction of leafy biomass that
+                                        % is littered in autumn, and at the same time determines the minimum winter LAI by multiplication with the maximum LAI
+                                        % seventh number is the day number of the earliest start of the growing season
+                                        % last number is the day of the year that autumn starts
+KBeer = 0.5;                            % Beer's law constant for photosynthesis models, values around 0.5
+LAICarbonFraction = 0.1;                % relates leaf area index to kg C/m2 (kg C/m2 per unit of LAI)
+PhotoPar = [0.5 0.05 16.0 0.03];        % Parameters for photosynthesis model 5 for tundra, Shaver et al, J. Ecology 2007
+                                        % 1: PlantResp0 Plant respiration at zero degrees 0.4-1.5
+                                        % 2: Temperature sensitivity factor plant respiration 0.03 - 0.07
+                                        % 3: light-saturated photosynthetic rate per unit leaf area (??mol m???2 leaf s???1) val. 6-20
+                                        % 4: initial slope of the light response curve (??mol CO2 ??mol???1 photons) val 0.05???0.12
+AmbientCO2 = 385.0;                     % Ambient CO2 concentration
+CO2File = "";                           % File with variable CO2 values, for each simulation year one value + 1 extra value, only to be used with ProductionModel 3/4
+                                        % if an empty string, the value of AmbientCO2 is used for all years
+ShootsFactor = 0.7;                     % mass fraction of primary production that consists of shoots; the remainder is root growth (Kuikman 1996: 0.85-0.65)
+RespFac = [0.015 0.01];                  % factor of primary production that is respirated during growth
+                                        % first value is growth respiration, second maintenance respiration
+ProdTFunc = [5 25];                     % determines temperature dependent production rate; 1st number is minimum, 2nd optimum
+SatCorr = 0.0;                          % correction of production for saturation of topsoil, depresses production at high saturation, switched off when 0
+GrowFuncConst = 4.0;                      % proportionality constant growth functioen - primary productivity for plant transport in methane model
+SpringCorrection = 0;                   % Correction (0-1) for stronger exudation in spring; influences priming and exudate production, if 0, disables spring correction
+                                        % correction is a factor of 1+SpringCorrection
+MaxProd = 0.0057;                       % Maximum primary productivity (kgC/m2/day)
+MinProd = 0.0;                          % Minimum primary productivity
+MaxRootDepth = 0.3;                     % maximum root depth (m)
+NoRootsBelowGWT = 1;                    % if 1, no roots will grow below groundwater table (No telmatophytes)
+RootLambda = 20;                        % Decay rate exponential root distribution function
+RootSenescence = 0.003;                 % root senescence factor = proportion of root mass that dies during each time step
+InitRoots = 0.7;                        % initial root mass in all layers
+ExudateFactor = 0.2;                    % mass fraction of of below-ground production that consists of exudates
+BioMass = 0.3;                          % initial above ground biomass kg C /m2 (standing crop)
+                                        % NB: this is excluding the root mass, which is specified in InitRoots
+LitterLayer = 0.3;                      % organic matter stored in above ground litter layer, in kg C / m2
+LitterConversion = 0.01;                % Conversion factor of daily conversion of above ground to below ground litter at reference temperature Tref; the factor is temperature adjusted such that at 0 degrees the conversion factor is also 0
+BioMassSenescence = 0.001;			        % biomass senescence at each DAY as fraction of above-ground biomass
+Harvest = [180 0.75; 240 0.75];         % harvest dates (1st column) and fraction of biomass harvested (2nd column)
+Manure = [80 0.1; 200 0.1];             % Manure application dates (column 1) and quantity (column 2) in kg C/m2/day
+Grazing = [0 130 0.0001 0.00005; 250 365 0.0001 0.00005];
+% Parts of the year in which grazing occurs, each row is a range of days
+% followed by the amount of biomass removed (kg C m2/day and the amount of excretion (kg C m2/day)
+ManureFluidFrac = 0.75;                 % fluid fraction of manure
+ManureLayers = [0.5 0.75; 0.3 0.25; 0.2 0];
+% partitioning of manure among layers; first column: fluids; second column: solids
+
+% PARAMETERS METHANE MODEL
+
+MethaneReservoirs = [0 1 1 1 0.5 0 0];   % This parameter tells which reservoirs are summed for calculating methane production from easily decomposed
+                                         % organic matter reservoirs. It allows to delete or reduce some reservoirs; peat always should be deleted
+MethaneR0 = 0.4;                         % Methane production rate factor for fresh organic C microM/h
+                                         % SITE-SPECIFIC PARAMETER, CAN BE USED TO TUNE THE MODEL
+                                         % Walther & Heimann 2000: values between 0.3 and 0.6 at high latitude sites and 2.8 at tropical site
+CO2CH4ratio = 1.0;                       % Molar ratio between CH4 and CO2 production; for acetate splitting this is 0.5, for CO2 reduction 0,
+                                         % may also be a number in between
+MethaneR0Pt = 0.0001;          % Methane production rate factor for peat
+                                         % a small contribution from older peat hardly influences modelled output but gives a more realistic CH4 profile
+MethanepHCorr = 0.10;                    % for every PH unit lower or higher than neutral, MethanepHCorr*R0 is added to R0
+MethaneQ10 = 6.0;                        % Q10 value for temperature correction methane production; range 1.7 - 16 ref. in Walther & Heimann 2000
+                                         % value of 6 based on Walther & Heimann 2000
+MethaneOxQ10 = 1.4;                      % Q10 value for temperature correction methane oxidation; range 1.4 - 2.1, ref. in Walther & Heimann 2000
+MethaneVmax = 5;                         % Vmax Michaelis-Menten eq methane oxidation micrMol/hr range 5-50
+                                         % SITE-SPECIFIC PARAMETER, CAN BE USED TO TUNE THE MODEL; values are likely to be low at low water table sites
+MethaneKm = 5;                           % Km Michaelis-Menten eq methane oxidation micrMol range 1-5
+MethaneMaxConc = 0.500;                  % maximum methane concentration in pore water (mol/m3 in soil pore volume, including bubbles)
+                                         % in Walter & Heimann this appears to be in micromol/liter; the units mentioned there should be divided by 1000 to convert
+MethaneERateC = 1;                       % Ebullition rate constant (1/hr)
+MethanePRateC = 0.01;                    % Rate constant for plant transport of methane (1/hr)
+MethaneAir = 2.0;                        % methane concentration in the atmosphere - ppmv
+MethaneTRef = 10;                        % reference temperature for temperature sensitivity methane production
+                                         % if negative, the average yearly temperature is selected as reference temperature
+MethanePType = 15;                       % Vegetation type factor for gas transport by plants range: 0-15
+MethanePlantOx = 0.9;                    % Fraction of methane that is oxidized during transport in plants
+PartialAnaerobe = 0;					% Determines the slope of the relation of partial anaerobe soil fraction above the water table  to soil saturation, value >1; if <1, no partial anarobe fraction is assumed to be present
+AnaerobeLagFactor = 0.0;				% Determines time lag for development of sufficiently anaerobic conditions after rapid saturation of a layer
+InitMethane = [0.001 0.001 0.040 0.080 0.100 0.150 0.300 0.400 0.450 0.500 0.500 0.500 0.500 0.500 0.500];
+                                          % Initial methane concentration profile (mol/m3 in soil pore volume, including bubbles)
+                                          % in Walter & Heimann this appears to be in micromol/liter; the units mentioned there should be divided by 1000 to convert
+
+
+% SITE SPECIFIC PARAMETERS DEFAULT VALUES ONLY, DEFINE THESE MORE SPECIFICALLY IN SITE-SPECIFIC PARAMETER FILE
+
+DayMinGW = 220;                          % day of minimum groundwater table
+MinGW = 0.25;                            % lowest water table level at this day (m below surface)
+										 % for modelled water table using the water table module this is the minimum watertable for the entire simulation period
+AmplitudeGW = 0.20;                      % amplitude of water table movement  if watertable is sinusoidal
+EvapCorrection = 0.02;				     % correction factor to reduce evaporation if water table is below surface, for water table model
+RunoffThreshold = 0.1;					 % Threshold above which a ponded water layer produces runoff; for water table model
+OpenWaterFactor = 1.0;					 % evaporation correction factor for open water evaporation: for water table model 
+CropFactor = 1.0;						 % Makkink Crop factor to correct evaporation for vegetation properties; for water table model
+EvapFile = "";                           % evaporation data file, evaporation in millimeter, for water table model
+PrecipFile = "";                         % precipitation data file, precipitation in mm, for water table model
+GwFile = "";                             % file name where groundwater time series is stored
+                                         % if this is an empty string a sinusoidal time series will be assumed
+T_average = 10.5;                        % average yearly temperature
+T_amplitude = 7.75;                      % amplitude of temperature throughout the year
+T_ref = 11;                              % reference temperature for correction of decay constants
+ThermDiff = 0.0136;                      % thermal diffusivity, if not defined it is estimated from soil properties
+                                         % this parameter is not used if ThermModel == 0
+Tdata = "";                              % data file with temperature time series; if empty, a sinusoidal temperature time series will be used
+T_init = [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5;    % Initial temperature profile
+          10 10 10 10 10 10 10 10 10 10 10 10 10 10 10]
+MaxSnowdepth = 0.0;                      % Maximum snow depth (meters)
+DayMaxSnowdepth = 60;                    % Day number of maximum snow depth  - NB: is supposed to lie in the first half of the year, so < 182
+SnowMeltrate = 0.01;                     % Rate of snowmelt meter per degree C above zero per day
+VegTScalingFactor = 1.0;			     % scaling factor for air to soil surface temperature; put to one if soil surface temperature is input; outherwise a value between 0.6 and 1.0
+SoilMoisture = "";                       % external soil moisture file
+DrainageDist = 1.0;                      % Distance to nearest drainage channel (m) for calculation of groundwater flow
+Ksat = 0.01;                             % Saturated hydraulic conductivity of soil
+DrainLevel = 0.0;                        % reference level of water in the drains/river channel with respect to top of soil surface (m)
+DrainageFile = "";                       % input file name for level of water in the drains/river channel with respect to top of soil surface (m)
+                                         % if no file name is given, a fixed water level (DrainLevel) will be assumed
+RunOnFile = "";                          % input file name for run-on water for water table model, if an emty string, no run-on is assumed, mm/day
+
+% OUTPUT OPTIONS
+
+ProfileOutput = [1 2 3 4 5 6 7 8 11 12 13 14 15 16 17];
+% generates output files for vertical profiles of state variables
+% 1: temperature profile
+% 2: aeration
+% 3: methane profile
+% 4: root mass
+% 5: labile SOM reservoirs (2-6)  summed
+% 6: ice in kg.m3 soil
+% 7: water table
+% 8: npp
+% 9: totalSOM all SOM reservoirs (1-7)  summed
+% 11, 12, 13, 14, 15, 16, 17: SOM reservoir 1, 2, 3, 4, 5, 6, 7
+% SOM reservoirs:
+% 1: peat;
+% 2: dissolved organic matter manure
+% 3: manure solids
+% 4: root exudates
+% 5: litter and roots
+% 6: microbial biomass
+% 7: humus;
