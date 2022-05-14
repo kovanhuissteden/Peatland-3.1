@@ -46,6 +46,7 @@ readmatrix  - reads a matrix
 #define OUTPUT_WTABLE     "watertable.dat"
 #define OUTPUT_ANAEROB    "anaerobCO2.dat"
 #define OUTPUT_BALANCE    "carbonbalance.dat"
+#define OUTPUT_PEATDECOMP "peatdecomposition.dat"
 
 #define ERRORMSG1     "Cannot open file"
 #define ERRORMSG2     "Array/matrix read: there seem to be more items then specified for variable "
@@ -106,7 +107,7 @@ extern double CondQuartz;                 // thermal conductivity quartz
 extern double Rgas;                      // Gas constant
 extern double MethaneDiff;               // diffusion of methane in air in m2/d
 extern double MethaneDiffWater;          // diffusion of methane in water
-extern double AssimDissim;               // Assimiltion/Dissimilation ratio
+extern double DissimAssimRatio;          // Assimiltion/Dissimilation ratio
 extern double ResistFrac;                // Fraction of decomposited organic material that is transferred to resistant humus fraction
 extern double MolAct;                    // molecular activation energy aerobic organic matter decomposition
 extern Matrix Cfrac;                     // Carbon fraction (kg/kg) each SOM reservoir
@@ -115,6 +116,8 @@ extern double HalfSatPoint;              // half activity saturation point for c
 extern double RootAeration;              // Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
 extern double PrimingCorrection;         // Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
 extern Matrix Kdecay;                    // SOM decomposition constants for each reservoir
+extern Matrix AerobicQ10;                // Q10 for each reservoir
+extern double AnaerobicDARatio;          // Assimiltion/Dissimilation ratio anaeroob
 extern Matrix KPeatCN;                   // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
 extern double ShootsFactor;              // mass fraction root growth against shoot growth
 extern Matrix RespFac;                   // factor of primary production that is respirated during growth
@@ -243,6 +246,7 @@ extern double KLitter;                   // decomposition constant above-ground 
 extern int AnaerobicCO2;                   // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 extern Matrix LayerAnaerobic;             // Anaerobic CO2 per layer
 extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
+extern Matrix PeatDecay;                        // logs true loss of peat matrix
 
 void cmdline(int argc, char *argv[]);
 /* handles the command line options

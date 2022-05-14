@@ -106,7 +106,7 @@ void OutputInit()                                     // initializes output arra
   BioMassRec.Resize(NrOfSteps, 10);                    // storage of biomass, 1: time (days); 2: total plant biomass including roots (kg C.m-2); 3: primary production; 4: // plant respiration; 5: net CO2 flux (soil respiration + plant repiration - primary production); 6: soil respiration + dark respiration of vegetation (mg.m-2.hr-1); 7: // litter mass (kg C.m-2); 8: biomass removed by harvest and grazing 9: LAI
 
   LayerAnaerobic.Resize(NrOfSteps, NrLayers);
-  CarbonBalance.Resize(NrOfSteps, 25);
+  CarbonBalance.Resize(NrOfSteps, 26);
 }
 
 void SOMResInit()                                     // calculates organic C (kg C per layer) per SOM reservoir per layer
@@ -229,7 +229,7 @@ void InitTseries()
       day += Timestep;
     }
   }
-  PeatDecay.Resize(NrOfSteps);         // PeatDecay logs true loss of peat matrix
+  PeatDecay.Resize(NrOfSteps, 2);         // PeatDecay logs true loss of peat matrix
 }
 
 void InitWater()
@@ -445,6 +445,7 @@ int i;
     if (ProfileOutput(i) == 15) output15->close();
     if (ProfileOutput(i) == 16) output16->close();
     if (ProfileOutput(i) == 17) output17->close();
+    if (ProfileOutput(i) == 17) output17->close();
   }
 }
 
@@ -458,7 +459,9 @@ Decompositon constant for peat is corrected by C/N ratio of layers */
   int i, a;
   double k, ad, c;
 
-  ad = (1 - ResistFrac)/(1 + AssimDissim);              // correction for assimilation
+  /* Deleted code with old corrections
+  ad = (1.0 - ResistFrac)/(1.0 + AssimDissim);              // correction for assimilation:
+  // (1 - ResistFrac) is part that is not transferred to humus reservoir; 1/(1+AssimDissim) is fraction of this that goes to microbial population
   c = ad + ResistFrac;
   for (i = 1; i <= (NrReservoirs - 2); i++)
   {
@@ -466,6 +469,23 @@ Decompositon constant for peat is corrected by C/N ratio of layers */
     SplitRes(i, 2) = ResistFrac;
     k = Kdecay(i);                                      // correction of k
     Kdecay(i) = k + k * c;
+  } */
+  
+  /* Simplify:
+   * Fixed fraction to humus reservoir, based on ResistFrac
+   * Fixed fraction to microbial biomass, based on AssimDissim
+   * Rename AssimDissim to DissimAssimRatio for correct terminology ??
+   * No correction of k
+   * A further simplification could be to dowmsize SplitRes to a two element vector as in the current configuration ad and resistFrac is the same for all reservoirs
+   * However, maintaining SplitRes as a 5 x 2 matrix allows to have different dissimilation - assimilation ratios per reservoir, e.g. a lower rate for labile stuff
+   */
+  // New code:
+  ad = 1.0/(1.0 + DissimAssimRatio); // assimilation factor, part of decomposed organic matter carbon that is transferred to microbial bioomass
+  for (i = 1; i <= (NrReservoirs - 2); i++)
+  {
+    SplitRes(i, 1) = ad;                                // partitioning coeficients to resistant SOM and microbial biomass
+    SplitRes(i, 2) = ResistFrac;
+    SplitRes(i, 3) = 1.0 / (1.0 + AnaerobicDARatio);    // partitioning coefficient to microbial biomass from anaerobic CO2
   }
   KPeat.Resize(NrLayers);                               // C/N ratio dependent k for peat
   for (i = 1; i <= NrLayers; i++)

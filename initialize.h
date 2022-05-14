@@ -107,7 +107,8 @@ extern int ThermModel;                    // choice of soil thermal model
 extern char DataDir[];                    // data directory
 extern ofstream *MethAll;                 // log file methane profiles
 extern double ResistFrac;                 // Fraction of decomposited organic material that is transferred to resistant humus fraction
-extern double AssimDissim;                // Assimiltion/Dissimilation ratio
+extern double DissimAssimRatio;           // Assimiltion/Dissimilation ratio
+extern double AnaerobicDARatio;          // Assimiltion/Dissimilation ratio anaeroob
 extern Matrix SplitRes;                   // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
 extern Matrix KPeat;                      // Horizon-C/N dpendent peat decomposition rate
 extern Matrix CNRatio;                    // CN ratios for eac soil layer; the decomposition of peat can be made dependent on these

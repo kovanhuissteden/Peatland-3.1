@@ -78,17 +78,20 @@ double MethaneDiff = 1.7280;            // diffusion of methane in air in m2/d
 double MethaneDiffWater = 1.7280e-4;    // diffusion of methane in water
 
 /***************************Aerobic SOM decomposition*************************/
-double AssimDissim = 2.3;               // Assimiltion/Dissimilation ratio
+double DissimAssimRatio = 2.3;          // Assimiltion/Dissimilation ratio aeroob
+double AnaerobicDARatio =30.0;      // Assimiltion/Dissimilation ratio anaeroob
 double ResistFrac = 0.1;                // Fraction of decomposited organic material that is transferred to resistant humus fraction
 double MolAct = 74826;                  // molecular activation energy aerobic organic matter decomposition
+//!!!!!!!!!!!!!!!!!!! obsolete; will be replaced by Q10 for each OM reservoir
 Matrix Cfrac(7);                        // Carbon fraction (kg/kg) each SOM reservoir
 Matrix pFpoints(2,2);                   // Curve for determining environmental correction factor for dryness
 double HalfSatPoint = 0.1;              // half activity saturation point for correction factor aeration
 double RootAeration = 0;                // Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
 double PrimingCorrection = 0;           // Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
 Matrix Kdecay(7);                       // SOM decomposition constants for each reservoir
+Matrix AerobicQ10(7);                   // Q10 for each reservoir
 Matrix KPeatCN(2);                      // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
-Matrix SplitRes(5,2);                   // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
+Matrix SplitRes(5,3);                   // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
 Matrix KPeat;                           // Horizon-C/N dpendent peat decomposition rate
 int AnaerobicCO2 = 0;                   // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 Matrix KAnaerobic(7);                   // Anaerobic decomposition constants, for all SOM reservoirs
@@ -154,6 +157,7 @@ char CO2File[256] = "";                 // file with yearly averaged CO2 concent
 Matrix CO2Data;                         // CO2 data for longer model runs with photosynthesis model
 double DayLength = 12;                  // Daylenght for photosynthesis model
 double LitterLayer = 0.0;               // organic matter stored in above ground litter layer, in kg C / m2
+double OldLitter = 0.0;                 // For calculation of storage change of litter layer
 double LitterConversion;                // Conversion factor of daily conversion of above ground to below ground litter at reference temperature Tref; the factor is temperature adjusted such that at 0 degrees the conversion factor is also 0
 
 /************************* Methane model ************************************/
@@ -272,10 +276,10 @@ Matrix BioMassRec;                      // storage of biomass, primary productio
 Matrix CarbonBalance;                   // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
 /*
  * 1: primary production
- * 2: carbon inputs from manure
- * 3: carbon inputs from livestock excretion
- * 4-10: Changes in each soil carbon reservoir
- * 11: total CO2-C emission fom aerobic decomposition
+ * 2: carbon inputs from manure and livestock excretion
+ * 3-9: Changes in each soil carbon reservoir
+ * 10: total CO2-C emission fom aerobic decomposition
+ * 11: total CO2-C emission fom anaerobic decomposition
  * 12: CO2-C from above-ground litter decomposition
  * 13: total CH4-C emission
  * 14: CO2-C from CH4 oxidation
@@ -283,13 +287,14 @@ Matrix CarbonBalance;                   // Carbon balance: primary production, C
  * 16: (not yet implemented) storage change (anaerobic) CO2 in soil water
  * 17: storage change CH4 in soil water 
  * 18: (not yet implemented) CO2 - and CH4-change export by groundwater flow
- * 19: harvest
- * 20: grazing
- * 21: above-ground biomass senescence
- * 22: below-ground biomass senescence
- * 23: storage change above-ground biomass
- * 24: storage change below ground biomass
- * 25: balance sum
+ * 19: harvest + grazing
+ * 20: storage change above-ground biomass
+ * 21: storage change below ground biomass
+ * 22: storage change litter layer
+ * 23: total outgoing C (sum of 10, 11, 12, 13, 14, 19) 15 not included, is not included in primary production
+ * 24: total incoming C (sum of 1 and 2)
+ * 25: total storage change (sum of 3-9, 17, 20, 21, 22)
+ * 26: Balance (sum of 23 - 25
  */
 
 
@@ -333,7 +338,8 @@ Matrix HeatLayers;                       // layer midpoints layers thermal model
 Matrix MethaneR0Corr;                    // pH dependent methane production rate
 double TotalPrimProd = 0;                // total primary production
 Matrix NewSOM;                           // SOM reservoirs to be changed in each iteration step (kg C per layer)
-Matrix PeatDecay;                        // logs true loss of peat matrix
+Matrix OldSOM;                           // SOM reservoirs to be changed in each iteration step (kg C per layer) for calculation of storage change
+Matrix PeatDecay;                        // logs true loss of peat matrix; 1st column total peat decomposition; 2nd column aerobic decomposition
 Matrix ResYearSOM;                       // logs yearly change of all reservoirs in all layers
 int ManureCount = 0;                     // counter manure additions
 double PrimProd;                         // Primary production per time step
@@ -342,8 +348,8 @@ double SpringFactor;                     // instantaneous value of spring correc
 double PlantRespiration;                 // plant respiration
 Matrix CorrFac;                          // environmental correction factors for aerobic SOM decomposition constants k
 double CurrentGW;                        // Current water table during time step
-double PeatLoss = 0;                     // Totalized loss of peat C over all layers
-Matrix CO2;                              // CO2 evolved from each layer and reservoir
+double PeatLoss = 0.0;                     // Totalized loss of peat C over all layers
+Matrix CO2;                              // CO2 carbon evolved from each layer and reservoir
 Matrix MethaneFlux;                      // Methane flux at surface;  1st value: ebullition flux; 2nd: plant mediated flux; 3d:diffusive flux
 int TopSat;                              // Index of first saturated layer
 Matrix CO2FromMethane;                   // CO2 from methane oxidation

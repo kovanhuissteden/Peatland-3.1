@@ -62,13 +62,16 @@ void OrgProd()
 /* Net Primary Production and its partitioning among roots and shoots */
 {
   int i, toproots = 0;
-  double gw, belowgwt = 0, abovegwt = 0, rootsadded, litter, f, totalroots, f_senescence, b, litterfac, T, maxLAI, minLAI, minBiomass, oldBiomass;
+  double gw, belowgwt = 0, abovegwt = 0, rootsadded, litter, f, totalroots, f_senescence, b, litterfac, T, maxLAI, minLAI, minBiomass, oldBiomass, oldrootmass, oldshoots;
   Matrix rd, exudates, deadroots;
   Matrix result(2);
 
   // initalize LAI at the first time step
   maxLAI = Phenology(4);
   minLAI = (1.0 - Phenology(6)) * maxLAI;
+  OldLitter = LitterLayer;   // store existing litter C for calculation of storage change in function CollectCO2
+  oldrootmass = RootMass.Sum(); // store old rootmass
+  oldshoots = BioMass;
   DoHarvest();                                                    // harvest
   DoGraze();                                                      // grazing
   switch (ProductionModel)                                       // primary production modelled internally
@@ -81,15 +84,16 @@ void OrgProd()
         case 4: PrimProd = RadProd(); break; // Haxeltine and Prentice model, PAR calculated from cloud cover
         case 5: PrimProd = TundraProd(); break; // Shaver photosynthesis model for tundra, PAR data supplied
         case 6: PrimProd = TundraProd(); break; // Shaver photosynthesis model, PAR calculated from cloud cover
-    }
+  }
     
-	if (ProfileOutput.Contains(8))
-	{
-		result(2) = PrimProd;
-        result(1) = Timer + 0.5 * Timestep;
-        result.Write(output8);
-	}
-    if ((SatCorr > 0) && (Saturation(1) < SatCorr)) PrimProd = (Saturation(1) / SatCorr) * PrimProd;
+  if (ProfileOutput.Contains(8))
+  {
+    result(2) = PrimProd;
+    result(1) = Timer + 0.5 * Timestep;
+    result.Write(output8);
+  }
+  if ((SatCorr > 0) && (Saturation(1) < SatCorr)) PrimProd = (Saturation(1) / SatCorr) * PrimProd;
+  CarbonBalance(StepNr, 1) = PrimProd * CONVKGCTOMOLC;
   // correction factor for poor aeration due to topsoil waterlogging
   TotalPrimProd += PrimProd;
   Shoots = ShootsFactor * PrimProd;                              // shoots production
@@ -176,7 +180,7 @@ void OrgProd()
   if (ProductionModel < 3) PlantRespiration = f * (RespFac(1) * PrimProd / Timestep + RespFac(2) * (BioMass + totalroots));
   // For production model 3 and 4, the plant respiration is only calculated at leaf level, the root respiration has to be added 
   if ((ProductionModel == 3) || (ProductionModel == 4)) PlantRespiration = PlantRespiration + f * (RespFac(2) * totalroots);
-
+  CarbonBalance(StepNr, 15) = PlantRespiration * CONVKGCO2TOMOLC;
 /* plant respiration for production model 3 and 4 is calculated as part of the photosynthesis module
  however, this is only the growth respiration, the maintenance respiration still should be included
  units coming from photosynthesis model:  kg CO2 m2 per timestep */
@@ -186,15 +190,18 @@ void OrgProd()
   BioMassRec(StepNr, 4) = PlantRespiration;
   BioMassRec(StepNr, 7) = LitterLayer;
   BioMassRec(StepNr, 8) = HarvestGrazing;
+  CarbonBalance(StepNr, 20) = (BioMass - oldshoots) * CONVKGCTOMOLC;
+  CarbonBalance(StepNr, 21) = (oldrootmass - totalroots) * CONVKGCTOMOLC;
   HarvestGrazing = 0.0;
   BioMassRec(StepNr, 9) = TotalManure;
+  CarbonBalance(StepNr, 2) = TotalManure * CONVKGCTOMOLC;
   TotalManure = 0.0;
   BioMassRec(StepNr, 10) = CurrentLAI;
 }
 
 void DoHarvest()
 /* Harvest of biomass at selected dates */
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! add seperate output in Biomass to keep track of grazing and harvest!
+
 {
   int i, l;
   double harvested;
@@ -581,7 +588,7 @@ double TundraProd()
 }
 
 void AddManure()                            // manure addition
-// !!!!!!!!!!!!!!!!!!!!!!! This should be added to output to allow carbon balance calculation!!!!!!!!!!!!!!!!!!!!!
+
 {
   int i, j;
   double day;

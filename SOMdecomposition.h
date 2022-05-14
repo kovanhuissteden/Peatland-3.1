@@ -19,6 +19,8 @@
 
 /************************ GLOBAL VARIABLES ***********************************/
 
+
+
 extern Matrix CorrFac;            // environmental correction factors for aerobic SOM decomposition constants k
 extern Matrix RootMass;           // initial root distribution (kg C/m2 in each layer)
 extern Matrix Saturation;         // pore volume saturation with water
@@ -42,11 +44,15 @@ extern double PrimProd;           // Primary production per time step
 extern double Timestep;           // model timestep
 extern double SpringFactor;       // instantaneous value of spring correction, declared global for use by environmental correction SOM decomposition for priming effect
 extern Matrix Kdecay;             // SOM decomposition constants for each reservoir
+extern Matrix AerobicQ10;                // Q10 for each reservoir
+extern double AnaerobicAssimDissim;      // Assimiltion/Dissimilation ratio anaeroob
 extern double CurrentGW;          // Current water table during time step
 extern double LayerThickness;     // Thickness of depth step
 extern double LitterLayer;              // organic matter stored in above ground litter layer, in kg C / m2
 extern Matrix NewSOM;             // SOM reservoirs to be changed in each iteration step
-extern double PeatLoss;           // Totalized loss of peat C over all layers
+extern Matrix OldSOM;                           // SOM reservoirs to be changed in each iteration step (kg C per layer) for calculation of storage change
+extern Matrix PeatDecay;                        // logs true loss of peat matrix
+extern double PeatLoss;           // Totalized aerobic loss of peat C over all layers
 extern Matrix SplitRes;           // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
 extern Matrix CO2;                // CO2 evolved from each layer and reservoir
 extern Matrix ProfileOutput;      // determines which vertical profiles are sent to log files
@@ -71,6 +77,7 @@ extern Matrix LayerAnaerobic;      // Anaerobic CO2 per layer
 extern Matrix AnaerobSum;          // sum of anaerobic CO2 per layer
 extern double MethaneTRef;        // Reference temperature for temperature sensitivity methane production
 extern double KLitter;            // decomposition constant above-ground litter and standing dead biomass
+extern double OldLitter;                 // For calculation of storage change of litter layer
 extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
 /******************** FUNCTION DEFINITIONS ***********************************/
 

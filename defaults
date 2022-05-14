@@ -73,7 +73,7 @@ MethaneDiffWater = 1.7280e-4;   % diffusion of methane in water
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % PARAMETERS AEROBIC SOM DECOMPOSITION
-AssimDissim = 2.3;                              % Assimiltion/Dissimilation ratio
+DissimAssimRatio = 2.3;                         % Dissimilation/Assimilatio ratio aerobic decomposition; range 1 - 2.3
 ResistFrac = 0.1;                               % Fraction of decomposited organic material that is transferred to resistant humus fraction
 MolAct = 74826;                                 % molecular activation energy aerobic organic matter decomposition
 % this means a Q10 value of 2.96, can be computed from Q10 values according to: MolAct = -8314 ln Q10 / (1/(Tref+273)-1/(T+273))
@@ -83,10 +83,12 @@ HalfSatPoint = 0.1;                             % half activity saturation point
 RootAeration = 0;                               % Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
 PrimingCorrection = 0;                          % Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
 Kdecay = [0.02 100 4 365 4 365 0.005];          % SOM decomposition constants for each reservoir
+AerobicQ10 [3.5 2.0 2.0 2.0 3.0 2.0 4.0];             % Q10 values of aerobic decomposition separately for each reservoir
 KPeatCN = [0.016 0.00021];                      % constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
 AnaerobicCO2 = 1;                               % Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 KAnaerobic = [0.005 0.01 0.01 0.01 0.01 0.01 0.0001]; % Anaerobic decomposition constants, for all SOM reservoirs
-Q10Anaerobic = 3.5;                             % Q10 anaerobic decomposition
+Q10Anaerobic = 3.5;                             % Q10 anaerobic decomposition (reference temperature is equal to MethaneTref)
+AnaerobicDARatio = 30.0;                    % Anaerobic Dissimilation/Assimililation ratio
 KLitter = 0.5;                                  % Decomposition constant for standing dead biomass and above-ground litter
 
 % PARAMETERS ORGANIC MATTER PRODUCTION
@@ -94,7 +96,7 @@ KLitter = 0.5;                                  % Decomposition constant for sta
 ProductionModel = 2;                    % Production model:
                                         % 0 for simple sinusoidal function;
                                         % 1 for production dependent on temperature of upper soil layer
-                                        % 2 for production data read from file, variable NPPFile has to be defined
+                                        % 2 for production data read from file, variable NPPFile has to be defined (kgC/m2/day)
                                         % 3 for photosynthesis model, PAR data supplied in PARFile (Joule cm-2)
                                         % 4 for photosynthesis model, cloud cover data supplied in PARFile (fractions 0 - 1), PAR calculated, variable Latitude defined
                                         % 5 for photosynthesis model for tundra, Shaver et al, J. Ecology 2007 (not depending on CO2 concentration) PAR data supplied in PARFile (W m-2)
@@ -121,7 +123,7 @@ CO2File = "";                           % File with variable CO2 values, for eac
 ShootsFactor = 0.7;                     % mass fraction of primary production that consists of shoots; the remainder is root growth (Kuikman 1996: 0.85-0.65)
 RespFac = [0.015 0.01];                  % factor of primary production that is respirated during growth
                                         % first value is growth respiration, second maintenance respiration
-ProdTFunc = [5 25];                     % determines temperature dependent production rate; 1st number is minimum, 2nd optimum
+ProdTFunc = [5 25];                     % temperature dependent production rate model 1; 1st number is minimum temperature, 2nd optimum temperature
 SatCorr = 0.0;                          % correction of production for saturation of topsoil, depresses production at high saturation, switched off when 0
 GrowFuncConst = 4.0;                      % proportionality constant growth functioen - primary productivity for plant transport in methane model
 SpringCorrection = 0;                   % Correction (0-1) for stronger exudation in spring; influences priming and exudate production, if 0, disables spring correction
@@ -130,7 +132,7 @@ MaxProd = 0.0057;                       % Maximum primary productivity (kgC/m2/d
 MinProd = 0.0;                          % Minimum primary productivity
 MaxRootDepth = 0.3;                     % maximum root depth (m)
 NoRootsBelowGWT = 1;                    % if 1, no roots will grow below groundwater table (No telmatophytes)
-RootLambda = 20;                        % Decay rate exponential root distribution function
+RootLambda = 5.0;                        % Decay rate exponential root distribution function; larger values result in steepr decrease of root mass with depth
 RootSenescence = 0.003;                 % root senescence factor = proportion of root mass that dies during each time step
 InitRoots = 0.7;                        % initial root mass in all layers
 ExudateFactor = 0.2;                    % mass fraction of of below-ground production that consists of exudates
@@ -150,36 +152,36 @@ ManureLayers = [0.5 0.75; 0.3 0.25; 0.2 0];
 
 % PARAMETERS METHANE MODEL
 
-MethaneReservoirs = [0 1 1 1 0.5 0 0];   % This parameter tells which reservoirs are summed for calculating methane production from easily decomposed
-                                         % organic matter reservoirs. It allows to delete or reduce some reservoirs; peat always should be deleted
-MethaneR0 = 0.4;                         % Methane production rate factor for fresh organic C microM/h
+MethaneReservoirs = [0.0001 1 1 1 0.5 0 0];   % This parameter tells which reservoirs are summed for calculating methane production from easily decomposed
+                                         % organic matter reservoirs. It allows to delete or reduce some reservoirs; 
+                                         
+MethaneR0 = 0.4;                         % Methane production rate factor for fresh organic C milliMol/h/m3
                                          % SITE-SPECIFIC PARAMETER, CAN BE USED TO TUNE THE MODEL
                                          % Walther & Heimann 2000: values between 0.3 and 0.6 at high latitude sites and 2.8 at tropical site
-CO2CH4ratio = 1.0;                       % Molar ratio between CH4 and CO2 production; for acetate splitting this is 0.5, for CO2 reduction 0,
-                                         % may also be a number in between
-MethaneR0Pt = 0.0001;          % Methane production rate factor for peat
-                                         % a small contribution from older peat hardly influences modelled output but gives a more realistic CH4 profile
+CO2CH4ratio = 0.5;                       % Molar ratio between CH4 and CO2 production; for acetate splitting this is 0.5, for CO2 reduction 0.0,
+                                         % may also be a number between 0.0 and 0.5; the smaller the value, the larger amount of CH4 is produced over CO2
 MethanepHCorr = 0.10;                    % for every PH unit lower or higher than neutral, MethanepHCorr*R0 is added to R0
 MethaneQ10 = 6.0;                        % Q10 value for temperature correction methane production; range 1.7 - 16 ref. in Walther & Heimann 2000
                                          % value of 6 based on Walther & Heimann 2000
 MethaneOxQ10 = 1.4;                      % Q10 value for temperature correction methane oxidation; range 1.4 - 2.1, ref. in Walther & Heimann 2000
 MethaneVmax = 5;                         % Vmax Michaelis-Menten eq methane oxidation micrMol/hr range 5-50
                                          % SITE-SPECIFIC PARAMETER, CAN BE USED TO TUNE THE MODEL; values are likely to be low at low water table sites
-MethaneKm = 5;                           % Km Michaelis-Menten eq methane oxidation micrMol range 1-5
-MethaneMaxConc = 0.500;                  % maximum methane concentration in pore water (mol/m3 in soil pore volume, including bubbles)
+MethaneKm = 5;                           % Km Michaelis-Menten eq methane oxidation microMol range 1-5
+MethaneMaxConc = 500;                    % maximum methane concentration in pore water (millimol/m3 in soil pore volume, including bubbles)
                                          % in Walter & Heimann this appears to be in micromol/liter; the units mentioned there should be divided by 1000 to convert
-MethaneERateC = 1;                       % Ebullition rate constant (1/hr)
+MethaneERateC = 1.0;                     % Ebullition rate constant (hr-1); a value of 1 means all methane above the ebullition treshold is added to ebullition
 MethanePRateC = 0.01;                    % Rate constant for plant transport of methane (1/hr)
-MethaneAir = 2.0;                        % methane concentration in the atmosphere - ppmv
+                                         % value should not be higher than 0.1!
+MethaneAir = 1.8;                        % methane concentration in the atmosphere - ppmv
 MethaneTRef = 10;                        % reference temperature for temperature sensitivity methane production
                                          % if negative, the average yearly temperature is selected as reference temperature
 MethanePType = 15;                       % Vegetation type factor for gas transport by plants range: 0-15
 MethanePlantOx = 0.9;                    % Fraction of methane that is oxidized during transport in plants
 PartialAnaerobe = 0;					% Determines the slope of the relation of partial anaerobe soil fraction above the water table  to soil saturation, value >1; if <1, no partial anarobe fraction is assumed to be present
 AnaerobeLagFactor = 0.0;				% Determines time lag for development of sufficiently anaerobic conditions after rapid saturation of a layer
-InitMethane = [0.001 0.001 0.040 0.080 0.100 0.150 0.300 0.400 0.450 0.500 0.500 0.500 0.500 0.500 0.500];
-                                          % Initial methane concentration profile (mol/m3 in soil pore volume, including bubbles)
-                                          % in Walter & Heimann this appears to be in micromol/liter; the units mentioned there should be divided by 1000 to convert
+InitMethane = [1 1 40 80 100 150 300 400 450 500 500 500 500 500 500];
+                                          % Initial methane concentration profile (millimol/m3 in soil pore volume, including bubbles)
+                                          
 
 
 % SITE SPECIFIC PARAMETERS DEFAULT VALUES ONLY, DEFINE THESE MORE SPECIFICALLY IN SITE-SPECIFIC PARAMETER FILE

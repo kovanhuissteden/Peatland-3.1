@@ -86,6 +86,7 @@ extern double PotentialLAI;             // potential LAI based on temperature al
 extern double PreviousLAI;              // difference in LAI between successive time steps to calculate litter production in autumn
 extern double HarvestGrazing;             // total of harvest and grazing in one time step
 extern double TotalManure;                // total of manure added in one time step
+extern double OldLitter;                 // For calculation of storage change of litter layer
 extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
 
 void OrgProd();

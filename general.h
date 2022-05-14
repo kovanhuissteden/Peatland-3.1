@@ -46,7 +46,8 @@ typedef int BOOLEAN;
 #define MOLWEIGHTO 15.994               // molecular weight O
 #define MOLWEIGHTCH4 16.048             // molecular weight CH4
 #define SOLARCONSTANT 1361.5            // solar constant in W/m2
-
+#define CONVKGCTOMOLC 83.2570144035  // conversion factor of kg C to moles C (multiply by this)
+#define CONVKGCO2TOMOLC 22.7221086117  // conversion factor of kg C to moles C (multiply by this)
 #define GEN_ERROR1 "Function interp: x and y matrix contain an unequal amount of numbers"
 #define GEN_ERROR2 "Function interp: x matrix not monotonically rising"
 #define GEN_ERROR3 "Function interp: entries in xi out of range of x"

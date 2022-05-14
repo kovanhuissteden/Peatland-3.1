@@ -385,7 +385,7 @@ int readall()                     // read all parameters
 {
   double x;
   double *buf;
-  int count = 0, found = FALSE, len, r, c, maxpar = 112;
+  int count = 0, found = FALSE, len, r, c, maxpar = 114;
 
   buf = new double[10000];
   if (buf == NULL)
@@ -482,8 +482,11 @@ int readall()                     // read all parameters
   if (!found) found = readscalar(&x, "StartDay", DEFAULTS, TRUE);
   StartDay = (int)x;
   count += found;
-  found = readscalar(&AssimDissim, "AssimDissim", ParamFile, FALSE);
-  if (!found) found = readscalar(&AssimDissim, "AssimDissim", DEFAULTS, TRUE);
+  found = readscalar(&DissimAssimRatio, "DissimAssimRatio", ParamFile, FALSE);
+  if (!found) found = readscalar(&DissimAssimRatio, "DissimAssimRatio", DEFAULTS, TRUE);
+  count += found;
+    found = readscalar(&AnaerobicDARatio, "AnaerobicDARatio", ParamFile, FALSE);
+  if (!found) found = readscalar(&AnaerobicDARatio, "AnaerobicDARatio", DEFAULTS, TRUE);
   count += found;
   found = readscalar(&ResistFrac, "ResistFrac", ParamFile, FALSE);
   if (!found) found = readscalar(&ResistFrac, "ResistFrac", DEFAULTS, TRUE);
@@ -515,6 +518,10 @@ int readall()                     // read all parameters
   len = 7;
   found = readarray(Kdecay.Data(), &len, "Kdecay", ParamFile, FALSE);
   if (!found) found = readarray(Kdecay.Data(), &len, "Kdecay", DEFAULTS, TRUE);
+  count += found;
+  len = 7;
+  found = readarray(AerobicQ10.Data(), &len, "AerobicQ10", ParamFile, FALSE);
+  if (!found) found = readarray(AerobicQ10.Data(), &len, "AerobicQ10", DEFAULTS, TRUE);
   count += found;
   len = 2;
   found = readarray(KPeatCN.Data(), &len, "KPeatCN", ParamFile, FALSE);
@@ -1127,5 +1134,16 @@ void WriteOutput()
     exit(EXIT_FAILURE);
   }
   CarbonBalance.Write(output);
+  output->close();
+  
+  strcpy(buf, &DataDir[0]);
+  strcat(buf, &OutputFilePrefix[0]);
+  output = new ofstream(strcat(buf, OUTPUT_PEATDECOMP));
+  if (!output)
+  {
+    cout  << ERRORMSG11 << OUTPUT_PEATDECOMP << endl;
+    exit(EXIT_FAILURE);
+  }
+  PeatDecay.Write(output);
   output->close();
 }

@@ -175,7 +175,7 @@ void Methane()
   }
   // handle C loss from reservoirs; all data of CO2 and CH4 production remains in millimoles but for substraction of C reservoirs is converted to kg C 
   Closs =  cresstart - cres;
-  for (i = 1; i <= NrReservoirs; i++) CarbonBalance(StepNr, i + 3) -= Closs.SumCol(i) / 1000.0;  // store in CarbonBalance as moles C
+  //for (i = 1; i <= NrReservoirs; i++) CarbonBalance(StepNr, i + 3) -= Closs.SumCol(i) / 1000.0;  // store in CarbonBalance as moles C
   Closs *= CONVCH4CTOKGC;
   NewSOM -= Closs;  // update carbon reservoir size by subtracting C lost by CH4 production
   // anarobicCO2 and CO2production from oxidation also have to be added proberly to total anaerobc CO2 and CO2 from methane
@@ -184,7 +184,7 @@ void Methane()
   CO2FromMethane = totalCO2 * CONVCH4CTOKGC;                     // CO2 evolved from methane oxidation, convert from millimol CH4 to kg C
   CarbonBalance(StepNr, 11) += anaerobCO2.Sum() / 1000.0;   // add anaerobically generated CO2 to carbon balance tracking; has to add up to non-CH4 anaerobic production
   AnaerobSum += anaerobCO2 * CONVCH4CTOKGC;
-  CarbonBalance(StepNr, 13) = MethaneFlux.Sum() / 1000.0;
+  CarbonBalance(StepNr, 13) = MethaneFlux.Sum() / 1000.0;   // add methane carbon to carbon balance
   MethaneFlux *= MOLWEIGHTCH4 / (24 * Timestep);             // conversion from millimoles per timestep to mg per hr
   TotalMethane.PutData(StepNr, 2, MethaneFlux);                     // store current flux in result array
   TotalMethane(StepNr, 1) = DayNr;
