@@ -9,3 +9,5 @@ Version 3.1 is being developed to include a number of improvements:
 - Anaerobic non-CH4 organic matter decomposition
 - Temperature sensitivity improvement for all soil carbon reservoirs
 - Carbon immobilization by binding to mineral particles
+
+WARNING: THIS CODE HAS NOT BEEN TESTED YET!!!!
