@@ -385,7 +385,7 @@ int readall()                     // read all parameters
 {
   double x;
   double *buf;
-  int count = 0, found = FALSE, len, r, c, maxpar = 114;
+  int count = 0, found = FALSE, len, r, c, maxpar = 112;
 
   buf = new double[10000];
   if (buf == NULL)
@@ -491,9 +491,9 @@ int readall()                     // read all parameters
   found = readscalar(&ResistFrac, "ResistFrac", ParamFile, FALSE);
   if (!found) found = readscalar(&ResistFrac, "ResistFrac", DEFAULTS, TRUE);
   count += found;
-  found = readscalar(&MolAct, "MolAct", ParamFile, FALSE);
-  if (!found) found = readscalar(&MolAct, "MolAct", DEFAULTS, TRUE);
-  count += found;
+  //found = readscalar(&MolAct, "MolAct", ParamFile, FALSE);
+  //if (!found) found = readscalar(&MolAct, "MolAct", DEFAULTS, TRUE);
+  //count += found;
   found = readscalar(&KLitter, "KLitter", ParamFile, FALSE);
   if (!found) found = readscalar(&KLitter, "KLitter", DEFAULTS, TRUE);
   count += found;
@@ -524,9 +524,9 @@ int readall()                     // read all parameters
   if (!found) found = readarray(AerobicQ10.Data(), &len, "AerobicQ10", DEFAULTS, TRUE);
   count += found;
   len = 2;
-  found = readarray(KPeatCN.Data(), &len, "KPeatCN", ParamFile, FALSE);
+/*  found = readarray(KPeatCN.Data(), &len, "KPeatCN", ParamFile, FALSE);
   if (!found) found = readarray(KPeatCN.Data(), &len, "KPeatCN", DEFAULTS, TRUE);
-  count += found;
+  count += found; */
   found = readscalar(&ShootsFactor, "ShootsFactor", ParamFile, FALSE);
   if (!found) found = readscalar(&ShootsFactor, "ShootsFactor", DEFAULTS, TRUE);
   count += found;

@@ -70,7 +70,7 @@ extern Matrix TotalMethane;             // storage matrix for CH4 results
 extern int StepNr;                      // time step number during iteration
 extern Matrix ProfileOutput;            // determines which vertical profiles are sent to log files
 extern ofstream *output3;               // methane profile output file
-extern Matrix CO2FromMethane;           // CO2 from methane oxidation
+extern Matrix CO2FromMethaneOx;           // CO2 from methane oxidation
 extern double DayNr;                    // midpoint of simulated timestep, relative to day 1 of the year in which the simulation started
 extern Matrix UnFrozen;                 // Unfrozen water content (kg water / kg dry soil)
 extern double DensWater;                // density of water at 0 degr C
@@ -110,8 +110,8 @@ void planttrans(double &flux, Matrix &CH4oxidation, Matrix &CO2production, Matri
     rate:       rate of CH4 removal
 */
 
-void methaneprod(Matrix &prod, Matrix &labileC, Matrix &mc, Matrix &oxidized, Matrix &anaerob, double ttime);
-/*  Below water table methane production from soil organic matter and
+void methaneprod(Matrix &prod, Matrix &labileC, Matrix &mc, Matrix &oxidized, Matrix &anaerob, Matrix &Cremoved, double ttime);
+/*  Below water table methane production per hour from soil organic matter and
     oxidation in unsaturated zone as function of soil CH4 concentration
 
 Input:
@@ -123,6 +123,7 @@ mc      : methane concentration
 Output:
 
 prod    : total production or oxidation
+Cremoved: carbon removed from carbon reservoirs
 ttime   : time in days since start of model time step for calculation of rapid saturation depression of methane production
 oxidized: matrix with moles of methane oxidized per layer
 anaerob: anaerobically prduced CO2

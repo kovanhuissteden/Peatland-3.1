@@ -17,6 +17,10 @@
 
 //#include "matrix.h"
 
+#define PRODUCTION_ERROR1 "Primary production model: negative root mass, decrease RootSenescence parameter"
+#define PRODUCTION_ERROR2 "Primary production model: above-ground Biomass below minimum, check BioMassSenescence, LAICarbonFraction parameter"
+
+
 extern double DayOfTheYear;                  // Julian day number of the midpoint of the simulated time step relative to the current year;
 extern int ProductionModel;                  // Production model: 0 for simple sinusoidal function; 1 for production dependent on temperature of upper soil layer
 extern double MaxProd;                       // Maximum primary productivity (kgC/m2/day)
@@ -98,7 +102,7 @@ double SimpleProd();
 double TemperatureProd();
 /* Primary production from temperature upper soil layer */
 
-double TemperatureThornley();
+//double TemperatureThornley();
 /* Primary production from temperature upper soil layer, temperature function cf Thornley (1998) with steepness parameter = 2*/
 
 double PARcalc();

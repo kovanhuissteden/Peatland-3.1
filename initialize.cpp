@@ -99,8 +99,8 @@ void RootsInit()                                          // calculates root dis
 void OutputInit()                                     // initializes output arrays
 {
   TotalReservoir.Resize(NrLayers, NrReservoirs);      // total C per reservoir per layer
-  ReservoirTime.Resize(NrOfSteps, NrReservoirs + 3);
-/* storage matrix for CO2 per reservoir per timestep; an extra entry is added for CO2 from Methane oxidation */
+  ReservoirTime.Resize(NrOfSteps, NrReservoirs + 4);
+/* storage matrix for CO2 per reservoir per timestep; extra entries ar added for day number, CO2 from litter, CO2 from Methane oxidation and the total*/
   LayerTime.Resize(NrOfSteps, NrLayers + 1);           // storage matrix for CO2 per layer per timestep
                                                       // NOTE: only Walters model is used here, in the Matlab version there was a choice of two models
   BioMassRec.Resize(NrOfSteps, 10);                    // storage of biomass, 1: time (days); 2: total plant biomass including roots (kg C.m-2); 3: primary production; 4: // plant respiration; 5: net CO2 flux (soil respiration + plant repiration - primary production); 6: soil respiration + dark respiration of vegetation (mg.m-2.hr-1); 7: // litter mass (kg C.m-2); 8: biomass removed by harvest and grazing 9: LAI
@@ -119,21 +119,22 @@ void SOMResInit()                                     // calculates organic C (k
   for (i = 1; i <= NrLayers; i++)
   {
     a = (int)Layers(i, 4);                              // soil profile horizon number
-    ol = DBD(a) * LayerThickness * PercOrg(a) / 100;    // kg organic matter per layer
+    ol = DBD(a) * LayerThickness * PercOrg(a) / 100.0;    // kg organic matter per layer
     for (j = 1; j <= NrReservoirs; j++)
     {
       InitSOM(i, j) = ol * InitRes(a, j) * Cfrac(j);    // multiply (kg organic matter per layer) with (fraction organic matter) in reservoir and (reservoir C fraction)
     }
   }
   NewSOM = InitSOM;
-  ResYearSOM = InitSOM;
+  OldSOM = InitSOM;
+  OldLitter = LitterLayer;
 }
 
 void InitHeat()
 /* computes heat capacity and thermal conductivity from organic matter content and pore volume
  cf Hillel (1998) and Luckner & Schestakow (1991)                                           */
 
-//////!!!!!!!!! T_average: voor heat model = 0, calculate Taverage from data!
+//T_average: voor heat model = 0, calculate Taverage from data!
 {
   int i, a, l, j;
   double theta_sat, theta_wilt, f0, t, d, w;
@@ -445,7 +446,6 @@ int i;
     if (ProfileOutput(i) == 15) output15->close();
     if (ProfileOutput(i) == 16) output16->close();
     if (ProfileOutput(i) == 17) output17->close();
-    if (ProfileOutput(i) == 17) output17->close();
   }
 }
 
@@ -480,6 +480,7 @@ Decompositon constant for peat is corrected by C/N ratio of layers */
    * However, maintaining SplitRes as a 5 x 2 matrix allows to have different dissimilation - assimilation ratios per reservoir, e.g. a lower rate for labile stuff
    */
   // New code:
+  SplitRes.Resize(NrReservoirs - 2, 3);
   ad = 1.0/(1.0 + DissimAssimRatio); // assimilation factor, part of decomposed organic matter carbon that is transferred to microbial bioomass
   for (i = 1; i <= (NrReservoirs - 2); i++)
   {
@@ -487,13 +488,13 @@ Decompositon constant for peat is corrected by C/N ratio of layers */
     SplitRes(i, 2) = ResistFrac;
     SplitRes(i, 3) = 1.0 / (1.0 + AnaerobicDARatio);    // partitioning coefficient to microbial biomass from anaerobic CO2
   }
-  KPeat.Resize(NrLayers);                               // C/N ratio dependent k for peat
+/*  KPeat.Resize(NrLayers);                               // C/N ratio dependent k for peat REMOVED; NOT USED IN THE MODEL!
   for (i = 1; i <= NrLayers; i++)
   {
     a = (int)Layers(i,4);                               // soil horizon index
     k = KPeatCN(1) - KPeatCN(2) * CNRatio(a);           // correct k for CN based on empirical linear relation
     KPeat(i) = k + k * c;                               // apply correction as above
-  }
+  } */
 // SplitRes: fractions of the decayed component that are tranferred from primary to secondary reservoir
 // transfer to biomass: to be based on dissimilation/assimilation ratio, 2 for fungi and 2.3 for bacteria,
 // and death rate of biomass
@@ -519,7 +520,6 @@ void InitMethaneModel()
   TotalMethane.Resize(NrOfSteps, 5);                  // initalize total methane
   MethaneFlux.Resize(3);
   MethaneR0Corr.Resize(NrLayers);                     // pH dependent methane production rate
-  MethaneR0 = MethaneR0 * LayerThickness;                     // convert MethaneR0 from micromol/L/hr to millimol/layer/hr  1.0e3 (L-m3) * 1.03-3 (micro -milli) *LayerThickness
   MethaneAir = MethaneAir * 1.218581;
   // concentration in the air is recalculated here from ppmv to micromoles CH4-C in a 10 cm layer above the surface 
   // at standard seal level pressure and the current air temperature
@@ -542,6 +542,8 @@ void InitMethaneModel()
       cout << INIT_ERROR3 << endl;
       exit(EXIT_FAILURE);
     }
+    mc = mc * LayerThickness;
+  // convert MethaneR0 from millimol/h/m3 to millimol/hr/layer volume
     MethaneR0Corr(i) = mc;
   }
 }

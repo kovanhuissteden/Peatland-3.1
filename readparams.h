@@ -109,7 +109,7 @@ extern double MethaneDiff;               // diffusion of methane in air in m2/d
 extern double MethaneDiffWater;          // diffusion of methane in water
 extern double DissimAssimRatio;          // Assimiltion/Dissimilation ratio
 extern double ResistFrac;                // Fraction of decomposited organic material that is transferred to resistant humus fraction
-extern double MolAct;                    // molecular activation energy aerobic organic matter decomposition
+//extern double MolAct;                    // molecular activation energy aerobic organic matter decomposition
 extern Matrix Cfrac;                     // Carbon fraction (kg/kg) each SOM reservoir
 extern Matrix pFpoints;                  // Curve for determining environmental correction factor for dryness
 extern double HalfSatPoint;              // half activity saturation point for correction factor aeration

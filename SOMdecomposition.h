@@ -27,7 +27,7 @@ extern Matrix Saturation;         // pore volume saturation with water
 extern int NrLayers;              // Number of depth steps
 extern Matrix SoilTemp;           // soil temperatures model layers, interpolated from TProfile
 extern double T_ref;              // reference temperature for correction of decay constants
-extern double MolAct;             // molecular activation energy aerobic organic matter decomposition
+//extern double MolAct;             // molecular activation energy aerobic organic matter decomposition
 extern double Rgas;               // Gas constant
 extern Matrix Layer_pH;           // pH
 extern Matrix Layers;             // Layer boundaries
@@ -49,6 +49,9 @@ extern double AnaerobicAssimDissim;      // Assimiltion/Dissimilation ratio anae
 extern double CurrentGW;          // Current water table during time step
 extern double LayerThickness;     // Thickness of depth step
 extern double LitterLayer;              // organic matter stored in above ground litter layer, in kg C / m2
+extern double LitterDecomp;              // Litter decomposition kg C per timestep
+extern Matrix TData;                           // Air or soil temperature data from file Tfile
+extern Matrix BioMassRec;                    // storage of biomass, primary production and plant respiration
 extern Matrix NewSOM;             // SOM reservoirs to be changed in each iteration step
 extern Matrix OldSOM;                           // SOM reservoirs to be changed in each iteration step (kg C per layer) for calculation of storage change
 extern Matrix PeatDecay;                        // logs true loss of peat matrix
@@ -68,7 +71,7 @@ extern ofstream *output17;
 extern int StepNr;                // time step number during iteration
 extern Matrix ReservoirTime;      // storage matrix for CO2 per reservoir per timestep
 extern Matrix LayerTime;          // storage matrix for CO2 per layer per timestep
-extern Matrix CO2FromMethane;     // CO2 from methane oxidation
+extern Matrix CO2FromMethaneOx;     // CO2 from methane oxidation
 extern double DayNr;              // midpoint of simulated timestep, relative to day 1 of the year in which the simulation started
 extern int AnaerobicCO2;          // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2
 extern Matrix KAnaerobic;         // Anaerobic decomposition constants

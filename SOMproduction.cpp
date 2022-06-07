@@ -62,7 +62,7 @@ void OrgProd()
 /* Net Primary Production and its partitioning among roots and shoots */
 {
   int i, toproots = 0;
-  double gw, belowgwt = 0, abovegwt = 0, rootsadded, litter, f, totalroots, f_senescence, b, litterfac, T, maxLAI, minLAI, minBiomass, oldBiomass, oldrootmass, oldshoots;
+  double gw, belowgwt = 0, abovegwt = 0, rootsadded, litter, f, totalroots, f_senescence, b, litterfac, T, maxLAI, minLAI, minBiomass, oldBiomass, oldrootmass, oldshoots, plantrespC;
   Matrix rd, exudates, deadroots;
   Matrix result(2);
 
@@ -70,10 +70,12 @@ void OrgProd()
   maxLAI = Phenology(4);
   minLAI = (1.0 - Phenology(6)) * maxLAI;
   OldLitter = LitterLayer;   // store existing litter C for calculation of storage change in function CollectCO2
-  oldrootmass = RootMass.Sum(); // store old rootmass
+  oldrootmass = RootMass.Sum(); // store old rootmass and old biomass
   oldshoots = BioMass;
+  TotalManure = 0.0;
   DoHarvest();                                                    // harvest
   DoGraze();                                                      // grazing
+  AddManure();
   switch (ProductionModel)                                       // primary production modelled internally
   {
         case 0: PrimProd = SimpleProd(); break;
@@ -85,21 +87,20 @@ void OrgProd()
         case 5: PrimProd = TundraProd(); break; // Shaver photosynthesis model for tundra, PAR data supplied
         case 6: PrimProd = TundraProd(); break; // Shaver photosynthesis model, PAR calculated from cloud cover
   }
-    
+  if ((SatCorr > 0.0) && (Saturation(1) < SatCorr)) PrimProd = (Saturation(1) / SatCorr) * PrimProd;
   if (ProfileOutput.Contains(8))
   {
     result(2) = PrimProd;
     result(1) = Timer + 0.5 * Timestep;
     result.Write(output8);
   }
-  if ((SatCorr > 0) && (Saturation(1) < SatCorr)) PrimProd = (Saturation(1) / SatCorr) * PrimProd;
   CarbonBalance(StepNr, 1) = PrimProd * CONVKGCTOMOLC;
   // correction factor for poor aeration due to topsoil waterlogging
   TotalPrimProd += PrimProd;
   Shoots = ShootsFactor * PrimProd;                              // shoots production
   gw = GwData(StepNr);                                           // partition roots according to root distribution function
   if (NoRootsBelowGWT)                                           // no roots below groundwater table flag
-  {
+  { // this calculation is cumbersome; better make a temporary exponential root distribution?
     rd.Resize(NrLayers);
     for (i = 1; i <= NrLayers; i++)                              // find which part of the root distribution function is above the groundwater table
     {
@@ -113,89 +114,110 @@ void OrgProd()
     if (toproots > 0)
     {
       for (i = 1; i <= toproots; i++) rd(i) = RootDistrib(i) + RootDistrib(i) * belowgwt / abovegwt;
-    } else rd(1) = 1.0;                                           // water table above the profile, all roots added to top of profile
+    } else rd(1) = 1.0; // water table above the profile, all roots added to top of profile
   } else rd = RootDistrib;
-  rd *= (1 - ShootsFactor) * PrimProd;                            // calculate the amount of roots added
+  rd *= (1 - ShootsFactor) * PrimProd;                            // calculates the amount of roots added per layer
   SpringFactor = 1 + SpringCorrection * sin(2 * PI * (DayNr + 284) / 365);  // spring factor to account for enhanced exudate production during active growing season
-  exudates = rd * (SpringFactor * ExudateFactor);                 // exudates
-  // exudates.Disp();
+  exudates = rd * (SpringFactor * ExudateFactor);                 // exudates, are a fraction of the new root material added
   deadroots = RootMass * RootSenescence;                          // organic material dying roots;
   for (i = 1; i <= NrLayers; i++)
   {
     rootsadded = rd(i) - exudates(i) - deadroots(i);              // net root addition, prevent negative rootmass
     RootMass(i) = RootMass(i) + rootsadded;
-    if (RootMass(i) < 0) RootMass(i) = 0;
+    if (RootMass(i) < 0) {
+        RootMass(i) = 0;
+        cout << PRODUCTION_ERROR1 << endl;
+    }
     NewSOM(i, 4) = NewSOM(i, 4) + exudates(i);                    // add exudates and dead roots to SOM reservoirs
     NewSOM(i, 5) = NewSOM(i, 5) + deadroots(i);
   }
   if (ProfileOutput.Contains(4)) RootMass.Write(output4);         // log root mass to output file
-  /*
-   * cout << "root distribution, exudates, root mass:\n";
-  RootDistrib.Disp();
-  rd.Disp();
-  exudates.Disp();
-  RootMass.Disp();
-  */
-  BioMass += Shoots;                                              // total above ground biomass
-  BioMassRec(StepNr, 8) = 0.0;
-// Biomass senescence and litter production
-  minBiomass = minLAI * LAICarbonFraction;;
-  if (ProductionModel < 3) {  // Litter production by dying off of above-ground biomass
-      litter = BioMassSenescence * BioMass * Timestep; // a distinction between production models is maintianed for keeping compatibility with earlier versions of the model
-      LitterLayer += litter;
-      BioMass -= litter;
-      if (BioMass < 0.0) BioMass = 0.0;
-      CurrentLAI = BioMass / LAICarbonFraction;
-  } else { // fraction of biomass shedded in autumn is dependent on decrease of LAI per time step
-      if (LeafSenescence) { // autumn biomass senescence by temperare-driven decrease/increase of LAI;
-          f_senescence = (PreviousLAI - CurrentLAI) / PreviousLAI;
-      } else { //  normal biomass senescence during the growing season
-          f_senescence = BioMassSenescence;
-          CurrentLAI = CurrentLAI * (1 - f_senescence);
-      }
-      //cout << DayOfTheYear << ' ' << f_senescence << endl;
-      // CurrentLAI = CurrentLAI - f_senescence * BioMassSenescence;
-      if (CurrentLAI < minLAI) CurrentLAI = minLAI;
-      // surviving = BioMass * (1 - Phenology(6));  // surviving biomass
-      oldBiomass = BioMass;
-      BioMass = (1 - f_senescence) * BioMass;
-      if (BioMass < minBiomass) BioMass = minBiomass;
-      if (oldBiomass > BioMass) litter = oldBiomass - BioMass; else litter = 0.0;
-      LitterLayer += litter;
-  }
-  // convert aboveground litter to belowground litter reservoir
-    T = SoilTemp(1);
-    if (T > 0.0) { // no conversion if the soil is frozen
-        litterfac = T * (LitterConversion / T_ref);
-        litter = litterfac * LitterLayer;
-        NewSOM(1, 5) = NewSOM(1, 5) + litter;
-        LitterLayer -= litter;
-    }
-/* Plant respiration:
+  totalroots = RootMass.Sum();  // total root mass kg C
+  /* Plant respiration:
    Respiration is linearly dependent on both primary production and total biomass, converted to CO2 eq
-   total biomass has to be multiplied by the time step since the unit of the conversion factor is day-1 */
+   total biomass has to be multiplied by the time step since the unit of the conversion factor is day-1 
+   For production model 3 and 4, only the leaf respiration is calculated in the model, the root respiration
+   has to be added and PrimProd corrected for it 
+   For productionmodel 5 and 6, total plantrespiration is included in the model*/
   f = Timestep * 3.6641;                                           // timestep and C - CO2 conversion factor
-  totalroots = RootMass.Sum();
-  // if (ProductionModel < 3) PlantRespiration = f * (RespFac(1) * PrimProd / Timestep + RespFac(2) * (BioMass + totalroots)); else PlantRespiration = PlantRespiration + f * (RespFac(2) * (BioMass + totalroots));
-  if (ProductionModel < 3) PlantRespiration = f * (RespFac(1) * PrimProd / Timestep + RespFac(2) * (BioMass + totalroots));
+  if (ProductionModel < 3) {
+      plantrespC = RespFac(1) * PrimProd / Timestep + RespFac(2) * (BioMass + totalroots);
+      PrimProd -= plantrespC;
+      if (PrimProd < 0.0) PrimProd = 0.0;
+      PlantRespiration = f * plantrespC;
+    //cout << totalroots << " | " << PrimProd << endl;
+  }
   // For production model 3 and 4, the plant respiration is only calculated at leaf level, the root respiration has to be added 
-  if ((ProductionModel == 3) || (ProductionModel == 4)) PlantRespiration = PlantRespiration + f * (RespFac(2) * totalroots);
+  if ((ProductionModel == 3) || (ProductionModel == 4)) {
+      PrimProd -= RespFac(2) * totalroots;
+      if (PrimProd < 0.0) PrimProd = 0.0;
+      PlantRespiration = PlantRespiration + f * (RespFac(2) * totalroots);
+  }
   CarbonBalance(StepNr, 15) = PlantRespiration * CONVKGCO2TOMOLC;
 /* plant respiration for production model 3 and 4 is calculated as part of the photosynthesis module
  however, this is only the growth respiration, the maintenance respiration still should be included
  units coming from photosynthesis model:  kg CO2 m2 per timestep */
+  
+  BioMass += Shoots;                                              // total above ground biomass kg C
+  BioMassRec(StepNr, 8) = 0.0;
+// Biomass senescence and litter production
+  minBiomass = minLAI * LAICarbonFraction;
+  oldBiomass = BioMass;
+  if (ProductionModel < 3) {  // Litter production by dying off of above-ground biomass
+      litter = BioMassSenescence * BioMass * Timestep; // a distinction between production models is maintianed for keeping compatibility with earlier versions of the model
+     /* LitterLayer += litter;
+      BioMass -= litter;
+      if (BioMass < minBiomass) {
+          BioMass = minBiomass;
+          cout << PRODUCTION_ERROR2 << endl;
+      }
+      CurrentLAI = BioMass / LAICarbonFraction; */
+// CHECK IF NO CARBON IS LOST HERE
+  } else { // fraction of biomass shedded in autumn is dependent on decrease of LAI per time step
+      if (LeafSenescence) { // autumn biomass senescence by temperare-driven decrease/increase of LAI;
+          f_senescence = (PreviousLAI - CurrentLAI) / PreviousLAI;
+      } else { //  normal biomass senescence during the growing season
+          f_senescence = BioMassSenescence * Timestep;
+          CurrentLAI = CurrentLAI * (1 - f_senescence);
+      }
+      if (CurrentLAI < minLAI) CurrentLAI = minLAI;
+      litter = f_senescence * BioMass;
+      /*if (BioMass < minBiomass) {
+          BioMass = minBiomass;
+          cout << PRODUCTION_ERROR3 << endl;
+      }
+      if (oldBiomass > BioMass) litter = oldBiomass - BioMass; else litter = 0.0;
+      LitterLayer += litter;*/
+  }
+  if ((BioMass - litter) <= minBiomass) {  // litter should not be more than remaining minimum biomass
+      litter = BioMass - minBiomass;
+      BioMass = minBiomass;
+      cout << PRODUCTION_ERROR2 << endl;
+  } else {
+      BioMass -= litter;
+  }    
+  LitterLayer += litter;
+  // convert aboveground litter to belowground litter reservoir
+  T = SoilTemp(1);
+  if (T > 0.0) { // only conversion if the soil is not frozen; otherwise no biologicaal activy to physically transport litter into the top layer
+        litterfac = T * (LitterConversion / T_ref);
+        litter = litterfac * LitterLayer;
+        NewSOM(1, 5) = NewSOM(1, 5) + litter;
+        LitterLayer -= litter;
+  }
+
   BioMassRec(StepNr, 1) = DayNr;
-  BioMassRec(StepNr, 2) = BioMass + totalroots;                     // log total biomass, primary production and respiration
-  BioMassRec(StepNr, 3) = PrimProd;
-  BioMassRec(StepNr, 4) = PlantRespiration;
-  BioMassRec(StepNr, 7) = LitterLayer;
+  BioMassRec(StepNr, 2) = BioMass + totalroots;                     // log total biomass, kg C m-2
+  BioMassRec(StepNr, 3) = PrimProd;    //  primary production kg C m-2 timestep-1
+  BioMassRec(StepNr, 4) = PlantRespiration; // kg CO2 m-2 timestp-1
+  // litter is stored after litter decomposition in CollectCO2
   BioMassRec(StepNr, 8) = HarvestGrazing;
+  CarbonBalance(StepNr, 19) = HarvestGrazing  * CONVKGCTOMOLC;
   CarbonBalance(StepNr, 20) = (BioMass - oldshoots) * CONVKGCTOMOLC;
-  CarbonBalance(StepNr, 21) = (oldrootmass - totalroots) * CONVKGCTOMOLC;
+  CarbonBalance(StepNr, 21) = (totalroots - oldrootmass) * CONVKGCTOMOLC;
   HarvestGrazing = 0.0;
   BioMassRec(StepNr, 9) = TotalManure;
   CarbonBalance(StepNr, 2) = TotalManure * CONVKGCTOMOLC;
-  TotalManure = 0.0;
   BioMassRec(StepNr, 10) = CurrentLAI;
 }
 
@@ -269,8 +291,8 @@ double TemperatureProd()
   return a;
 }
 
-double TemperatureThornley()
-/* Primary production from temperature upper soil layer, temperature function cf Thornley (1998) with steepness parameter = 2*/
+/*double TemperatureThornley()
+// Primary production from temperature upper soil layer, temperature function cf Thornley (1998) with steepness parameter = 2
 {
   double a, maxf, T, tfac, Tmin, Tmax, refT, q, m;
 
@@ -288,7 +310,7 @@ double TemperatureThornley()
   a = Timestep * (MinProd + tfac * (MaxProd - MinProd));
 
   return a;
-}
+}*/
 
 
 double PARcalc()
@@ -447,18 +469,14 @@ double PhotoSynthesis(double LAI, double I)
     je = c1 * apar * cmass * cq / h;
     // Calculation of rubisco-activity-limited photosynthesis rate JC, molC/m2/h Eqn 5, Haxeltine & Prentice 1996
     jc = c2 * vm / 24.0;
-    // Calculation of daily gross photosynthesis, Agd, gC/m2/day Eqn 2, Haxeltine & Prentice 1996
-    agd = h * (je + jc - sqrt(pow((je + jc), 2.0) - 4.0 * theta * je * jc)) / (2.0 * theta);
-    // Daily leaf respiration, Rd, gC/m2/day Eqn 10, Haxeltine & Prentice 1996
-    rd = b[ptype - 1] * vm;
-    // Daily net photosynthesis (at leaf level), And, gC/m2/day
-    nd = agd - rd;
-    // Total daytime net photosynthesis, Adt, gC/m2/day Eqn 19, Haxeltine & Prentice 1996
-    adt= nd + (1.0 - h / 24) * rd;
     
+    agd = h * (je + jc - sqrt(pow((je + jc), 2.0) - 4.0 * theta * je * jc)) / (2.0 * theta); // Calculation of daily gross photosynthesis, Agd, gC/m2/day Eqn 2, Haxeltine & Prentice 1996
+    rd = b[ptype - 1] * vm; // Daily leaf respiration, Rd, gC/m2/day Eqn 10, Haxeltine & Prentice 1996
+    nd = agd - rd;  // Daily net photosynthesis (at leaf level), And, gC/m2/day
+    adt= nd + (1.0 - h / 24) * rd; // Total daytime net photosynthesis, Adt, gC/m2/day Eqn 19, Haxeltine & Prentice 1996
     PlantRespiration = Timestep * C_CO2 * rd / 1000.0;  // convert from g C/m2/d to kg CO2 m2 per timestep
-    return (Timestep * adt / 1000.0);  // convert from g C/m2/d to kg C m2 per timestep
-    
+    // return (Timestep * adt / 1000.0);  // previous output of adt is too high, it included plat respiration while the output should be net photosynthesis
+    return (Timestep * nd / 1000.0);  // convert from g C/m2/d to kg C m2 per timestep
 }
 
 
@@ -547,9 +565,14 @@ double TundraProd()
      respbeta Temperature sensitivity factor plant respiration
      pmax light-saturated photosynthetic rate per unit leaf area (μmol m–2 leaf s–1)
      pslope is the initial slope of the light response curve (μmol CO2 μmol–1 photons)
+     
+     NB: this model estimates a higer plant respiration than the Haxeltine and Prentice model, which includes only the leaf respiration;
+     here the entire plant respiration is estimated (including roots and stems)
+     
+     Calculation of Growing Degree Days; counter is reset at start of the year
      */
     
-    /* Calculation of Growing Degree Days; counter is reset at start of the year */
+    
 
     par = PARcalc(); // PAR calculation
     LAI = LAICalc();
@@ -570,20 +593,14 @@ double TundraProd()
      multiplication factor is derived from https://www.berthold.com/en/bio/how-do-i-convert-irradiance-photon-flux
      assuming that 66% is radiation between 470 and 520 nm and the rest is 66 nm */
     gpp = (pmax / KBeer) * log((pmax + pslope * I) / (pmax + pslope * I * exp(-KBeer * LAI))); // Gross Primary Production μmol m–2 ground s–1
-    //cout << er << ' ' << gpp << endl;
     // Conversions from micromols CO2 m-2 s-1 to kg CO2 m-2 per timestep
     // convfac = Timestep * DayLength * 3600 * 44.01 / 1.0e9;
     // BUG CORRECTION: convert to kg C m-2 per timestep 
-    convfac = Timestep * 24 * 3600 * MOLWEIGHTCO2 * 1.0e-9; // convert from μmol CO2 m–2 ground s–1 to kg CO2 m2 h-1; plant respiration occurs during the whole day
+    convfac = Timestep * 24 * 3600 * MOLWEIGHTCO2 * 1.0e-9; // convert from μmol CO2 m–2 ground s–1 to kg CO2 m2 per time step; plant respiration occurs during the whole day
     PlantRespiration = er * convfac;
-    convfac = Timestep * DayLength * 3600 * MOLWEIGHTC * 1.0e-9; // convert from μmol CO2 m–2 ground s–1 to kg C m2 h-1;photosynthesis only during the day
-    NPP = (gpp - er) * convfac;
+    convfac = Timestep * DayLength * 3600 * MOLWEIGHTC * 1.0e-9; // convert from μmol CO2 m–2 ground s–1 to kg C m2 per time step; photosynthesis only during the day
+    NPP = (gpp - er * DayLength / 24.0) * convfac;
     if (NPP < 0.0) NPP = 0.0;
-    
-    //convfac = Timestep * DayLength * 3600 * 44.01 / (1.0e9 * C_CO2); // klopt deze conversiefactor wel?  
-    //PlantRespiration = er * convfac;
-    //gpp = gpp * convfac;
-    //NPP = gpp - PlantRespiration;
     return NPP;
 }
 
@@ -591,19 +608,24 @@ void AddManure()                            // manure addition
 
 {
   int i, j;
-  double day;
+  double day, liquids, solids, totalliquids = 0.0, totalsolids = 0.0, excretion;
 
 // Manure addition
   for (i = 1; i <= Manure.Rows(); i++)       // check if manure has to be added at the current day
   {
     day = Manure(i, 1);
-    if ((day >= (DayOfTheYear - 0.5 * Timestep)) && (day < (DayOfTheYear + 0.5* Timestep)))       // the day should fall within the time step centred on the current day
+    if ((day >= (DayOfTheYear - 0.5 * Timestep)) && (day < (DayOfTheYear + 0.5* Timestep)))       // the day should fall within the time step covering the current day
     {
       for (j = 1; j <= ManureLayers.Rows(); j++)
       {
-        NewSOM(j, 2) = NewSOM(j, 2) + Manure(i, 2) * ManureFluidFrac * ManureLayers(j, 1);        // manure fluids
-        NewSOM(j, 3) = NewSOM(j, 3) + Manure(i, 2) * (1 - ManureFluidFrac) * ManureLayers(j, 2);
-        TotalManure += Manure(i,2);
+        liquids = Manure(i, 2) * ManureFluidFrac * ManureLayers(j, 1);
+        NewSOM(j, 2) = NewSOM(j, 2) + liquids;        // manure fluids
+        TotalManure += liquids;
+        totalliquids += liquids;
+        solids = Manure(i, 2) * (1.0 - ManureFluidFrac) * ManureLayers(j, 2);
+        NewSOM(j, 3) = NewSOM(j, 3) + solids;
+        TotalManure += solids;
+        totalsolids += solids;
 // manure solids may be added to deeper layers if manure injection is used
       }
     }
@@ -612,15 +634,15 @@ void AddManure()                            // manure addition
   for (i = 1; i <= Grazing.Rows(); i++)     // Check if the current day of the year is within one of the grazing periods
   {
     if ((DayOfTheYear >= Grazing(i, 1)) && (DayOfTheYear < Grazing(i, 2))) {
-        NewSOM(1, 3) = NewSOM(1, 3) + Grazing(i, 4);
-        TotalManure += Grazing(i,4);
+        excretion = Timestep * Grazing(i, 4);
+        NewSOM(1, 3) = NewSOM(1, 3) + excretion;
+        TotalManure += excretion;
     }
 // excretion is assumed to be mostly solid and added to the top layer only
   }
 }
 
 void CollectBioMass()
-// !!!!!!!!!!!!!!!!!!!! add LAI, manure addition and harvest
 /* collects total Biomass, primary production, respiration, net CO2 flux incl. soil respiration
    in BioMassRec
    Elements of each row:
@@ -641,11 +663,11 @@ void CollectBioMass()
 
 /* Units in which the biomass and respiration data is stored originally
  BioMassRec(StepNr, 1) = DayNr;
- BioMassRec(StepNr, 2) = BioMass + totalroots;      dit is kg C/m2 
- BioMassRec(StepNr, 3) = PrimProd;  dit is kg C/m2/timestep
- BioMassRec(StepNr, 4) = PlantRespiration; kg CO2 m2 per timestep
- BioMassRec(StepNr, 5) = Soil respiration + plant respiration - NPP = NEE
- BiomassRec(StepNr, 6) = Soil respiration + plantrespiration (ecosystem respiration)
+ BioMassRec(StepNr, 2) = BioMass + totalroots; kg C/m2 
+ BioMassRec(StepNr, 3) = PrimProd; converted here from C/m2/timestep to mg CO2 m-2/hr
+ BioMassRec(StepNr, 4) = PlantRespiration; converted here from kg CO2 m2 per timestep to mg CO2 m-2/hr
+ BioMassRec(StepNr, 5) = Soil respiration + plant respiration - NPP = NEE  mg CO2 m-2/hr
+ BiomassRec(StepNr, 6) = Soil respiration + plantrespiration = ecosystem respiration mg CO2 m-2/hr
  BioMassRec(StepNr, 7) = LitterLayer;
 */
     

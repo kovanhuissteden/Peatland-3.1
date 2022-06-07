@@ -93,14 +93,16 @@ int main(int argc, char *argv[])
     for (i = 1; i <= NrOfSteps; i++)                        // model iteration
     {
         if (WatertableModel == 2) Watertable();				  // calculate watertable
-        OldSOM = NewSOM;
         Temperature();                                        // soil temperature
         Moisture(FALSE);                                      // soil moisture profile
+        OldSOM = NewSOM;
         OrgProd();                                            // Net primary production and partitioning among roots and shoots
-        AddManure();                                          // manure addition
+        //cout << NewSOM(1,4) - OldSOM(1,4) << " " << NewSOM(2,4) - OldSOM(2,4) << " "  << NewSOM(3,4) - OldSOM(3,4) << endl;
         EnviCor();                                            // environmental correction factors for first order decomposition constants aerobic decomposition of the SOM reservoirs
-        Decompose();                                          // aerobic decomposion of SOM above the water table
+        Decompose();                                          // aerobic and anaerobic decomposion of SOM above the water table (anaerobic excl. methane)
+        //cout << NewSOM(1,4) - OldSOM(1,4) << " " << NewSOM(2,4) - OldSOM(2,4) << " "  << NewSOM(3,4) - OldSOM(3,4) << endl;
         Methane();                                            // methane fluxes modified after the model of Walther (2000), Global Biogeochemical Cycles 14, 745 - 765
+        //cout << NewSOM(1,4) - OldSOM(1,4) << " " << NewSOM(2,4) - OldSOM(2,4) << " "  << NewSOM(3,4) - OldSOM(3,4) << endl;
         WriteSOMReservoirs();                                 // write SOM reservoirs to output files
         CollectCO2();                                         // Collect all CO2 and store in output arrays
         TrackTime();                                          // update time system

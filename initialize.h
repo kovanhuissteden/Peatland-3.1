@@ -109,11 +109,13 @@ extern ofstream *MethAll;                 // log file methane profiles
 extern double ResistFrac;                 // Fraction of decomposited organic material that is transferred to resistant humus fraction
 extern double DissimAssimRatio;           // Assimiltion/Dissimilation ratio
 extern double AnaerobicDARatio;          // Assimiltion/Dissimilation ratio anaeroob
+extern double LitterLayer;              // organic matter stored in above ground litter layer, in kg C / m2
+extern double OldLitter;                 // For calculation of storage change of litter layer
 extern Matrix SplitRes;                   // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
-extern Matrix KPeat;                      // Horizon-C/N dpendent peat decomposition rate
+//extern Matrix KPeat;                      // Horizon-C/N dpendent peat decomposition rate
 extern Matrix CNRatio;                    // CN ratios for eac soil layer; the decomposition of peat can be made dependent on these
 extern Matrix Kdecay;                     // SOM decomposition constants for each reservoir
-extern Matrix KPeatCN;                    // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
+//extern Matrix KPeatCN;                    // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
 extern Matrix Layer_pH;                   // pH
 extern Matrix MethaneR0Corr;              // pH dependent methane production rate
 extern double MethaneR0;                  // Methane production rate factor for fresh organic C microM/h
@@ -124,8 +126,8 @@ extern Matrix BioMassRec;                 // storage of biomass, primary product
 //extern ofstream *LabileSOM;               // logs labile C reservoirs, helpful to detect non-steady state behaviour
 //extern ofstream *TotalSOM;                // logs all C reservoirs, helpful to detect non-steady state behaviour
 extern Matrix NewSOM;                     // SOM reservoirs to be changed in each iteration step
+extern Matrix OldSOM;
 extern Matrix PeatDecay;                  // logs true loss of peat matrix
-extern Matrix ResYearSOM;                 // logs yearly change of all reservoirs in all layers
 extern Matrix ProfileOutput;              // determines which vertical profiles are sent to log files
 extern ofstream *output1;                 // output log files
 extern ofstream *output2;
