@@ -514,7 +514,7 @@ void InitMethaneModel()
   int i, a;
   double mc;
 
-  MethProfile = (InitMethane * PoreVol) * LayerThickness;  // initialize methane profile and convert from millimol/m3 in porewater to millimol/layer
+  MethProfile = (InitMethane * PoreVol) * LayerThickness;  // initialize methane profile and convert from concentration in millimol/m3 to millimol/layer
   MethaneMaxConc = MethaneMaxConc * LayerThickness;  // MethaneMaxConc has to be adapted to porevolume on calculation of ebullition in methane.cpp
   OxconCH4.Resize(NrLayers);                          // initialize oxygen consumption CH4 oxidation array
   TotalMethane.Resize(NrOfSteps, 5);                  // initalize total methane

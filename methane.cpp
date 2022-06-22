@@ -151,7 +151,7 @@ void Methane()
     methaneprod(prod, cres, ccn, CO2production, anaerob, Cremoved, ttime); // methane production including oxidition by methanotrophs above water table
     cres -= Cremoved * dth;
     totprod += prod * dth;  // total CH4 production
-    anaerobCO2 += anaerob * dth;
+    anaerobCO2 += anaerob * dth; //Anaerobically procuced CO2
     dc = prod * dth; // change due to production
     ccn += dc; // add change due to CH4 production / oxidation to concentration profile;
     totalCO2 += CO2production * dth; // add CH4 oxidation in the soil above groundwatertable to CO2 oxidation in the plant system
@@ -173,11 +173,13 @@ void Methane()
     {
       cout << METHANE_ERROR3 << endl;
     }
-    MethProfile = cc;
     topflux = diff(1) * (cc(1) - methair) / LayerThickness;     // diffusive flux at top of profile (note: flux per day)
     MethaneFlux(3) = MethaneFlux(3) + topflux * dt;                // flux per time step
+    cc(1) -= topflux * dt;
+    MethProfile = cc;
     ttime += dt;
   }
+  MethProfile = cc;
   // handle C loss from reservoirs; all data of CO2 and CH4 production remains in millimoles but for substraction of C reservoirs is converted to kg C 
   Closs =  cresstart - cres;  // substract carbon loss by methanogenic decomposition from carbon reservoirs
   Closs *= CONVCH4CTOKGC;
@@ -239,7 +241,7 @@ void planttrans(double &flux, Matrix &CH4oxidation, Matrix &CO2production, Matri
 
     Output:
 
-    flux:       total CH4 bubble flux millimol removed from all layers
+    flux:       total CH4  flux millimol removed from all layers
     CH4oxidation:  total CH4 oxidized in plant root system 
     CO2production: toatal CO2 produced by methane oxidation;
     rate:       rate of CH4 removal millimol removed from layer per hour
@@ -353,12 +355,12 @@ anaerob: anaerobically prduced CO2
         pcons = (1.0 - anaerobe) * f * MethaneVmax * mc(i) / (MethaneKm + mc(i)); // oxidation is specified here as negative 'production'
         if (pcons >= mc(i))                              // all methane oxidized
         {
-          pcons = - mc(i) + 0.0001 * MethaneAir / (273.15 + TData(StepNr));
+          pcons = mc(i) - 0.001 * MethaneAir / (273.15 + TData(StepNr));
 // a small fraction of CH4 (<< atmosphere concentration) is assumed to remain to prevent PDE solution problems in cases with deep and rapid falling groundwater tables
-        } else pcons = -pcons;
+        }
       }
-      oxidized(i) -= pcons;
-      prod(i) = pprod + pcons;                      // total production minus consumption
+      oxidized(i) += pcons;
+      prod(i) = pprod - pcons;                      // total production minus consumption
     }
   }
   //oxidized.Disp();
