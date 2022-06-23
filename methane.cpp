@@ -142,7 +142,7 @@ void Methane()
     ccn = cc + dc;
     planttrans (plantflux, CH4oxidation, CO2production, plantrate, ccn); // plant flux
     dc -= plantrate * dth;
-    CH4oxidation *= dth;  // CH4 consumed by plant oxidation in time step (NB CH4oxidation = CO2production in planttrans)
+    // CH4oxidation *= dth;  // CH4 consumed by plant oxidation in time step (NB CH4oxidation = CO2production in planttrans)
     totalCO2 += CO2production * dth; // total CO2 production from oxidation
     plantox += CO2production.Sum(); // Total plant oxidized CH4
     // previous: plant oxidation was added to top layer :     // CH4oxidation(1) += plantox * dth; 
@@ -188,9 +188,11 @@ void Methane()
   // this is done in function CollectCO2(); CO2 from oxidation is added to top layer
   CarbonBalance(StepNr, 14) = totalCO2.Sum() / 1000.0;   // add oxidized CH4 to carbon balance tracking
   CO2FromMethaneOx = totalCO2 * CONVCH4CTOKGC;                     // CO2 evolved from methane oxidation, convert from millimol CH4 to kg C
+  // CarbonBalance(StepNr, 16) = anaerobCO2.Sum() / 1000.0;
   anaerobCO2 = anaerobCO2 * CONVCH4CTOKGC;   // convert anaerobically generated CO2 to kg C per timestep
   AnaerobSum += anaerobCO2;
   CarbonBalance(StepNr, 13) = MethaneFlux.Sum() / 1000.0;   // add methane carbon to carbon balance
+  
   MethaneFlux *= MOLWEIGHTCH4 / (24 * Timestep);             // conversion from millimoles per timestep to mg per hr
   TotalMethane.PutData(StepNr, 2, MethaneFlux);                     // store current flux in result array
   TotalMethane(StepNr, 1) = DayNr;
@@ -259,7 +261,7 @@ void planttrans(double &flux, Matrix &CH4oxidation, Matrix &CO2production, Matri
     } 
     //cout << fgrow << endl;
     rate = RootDistrib * methconc;
-    rate *= MethanePRateC * MethanePType * fgrow; // CH4 removed in millimol CH4 per layer in integration time step
+    rate *= (MethanePRateC * MethanePType * fgrow); // CH4 removed in millimol CH4 per layer in integration time step
     for (i = 1; i <= NrLayers; i++)           // warning message for strange results - should not occur but can arise from erroneous parameters
     // e.g. MethanePRateC * LAI higher than 1
     {
@@ -269,10 +271,11 @@ void planttrans(double &flux, Matrix &CH4oxidation, Matrix &CO2production, Matri
             cout << METHANE_ERROR1 << endl;
         }
     }
-    CH4oxidation += rate * MethanePlantOx; // oxidation in root system (in millimol O2)
-    CO2production += rate * MethanePlantOx; // oxidation in root system (in millimol CO2)
+    CH4oxidation = rate * MethanePlantOx; // oxidation in root system (in millimol O2)
+    CO2production = rate * MethanePlantOx; // oxidation in root system (in millimol CO2)
+    // rate = rate * (1.0 - MethanePlantOx);
     flux = rate.Sum();   // total flux in miilimol CH4 over all layers summed
-    flux *= (1 - MethanePlantOx);
+    flux *= (1.0 - MethanePlantOx);
 
 }    // end planttrans
 
