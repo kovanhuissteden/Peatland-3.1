@@ -116,8 +116,7 @@ void methaneprod(Matrix &prod, Matrix &labileC, Matrix &mc, Matrix &oxidized, Ma
 
 Input:
 
-c       : total labile C soil in micromol;
-pc      : peat C
+labileC : total labile C soil in micromol;
 mc      : methane concentration
 
 Output:

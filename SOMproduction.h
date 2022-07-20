@@ -102,9 +102,6 @@ double SimpleProd();
 double TemperatureProd();
 /* Primary production from temperature upper soil layer */
 
-//double TemperatureThornley();
-/* Primary production from temperature upper soil layer, temperature function cf Thornley (1998) with steepness parameter = 2*/
-
 double PARcalc();
 /* calculates photosynthetically active radiation or returns data from file*/
 

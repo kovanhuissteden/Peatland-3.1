@@ -286,7 +286,7 @@ Matrix CarbonBalance;                   // Carbon balance: primary production, C
  * 14: CO2-C from CH4 oxidation
  * 15: CO2-C from plant respiration
  * 16: (not yet implemented) storage change (anaerobic) CO2 in soil water
- * 17: storage change CH4 in soil water 
+ * 17: storage change CH4 in soil
  * 18: (not yet implemented) CO2 - and CH4-change export by groundwater flow
  * 19: harvest + grazing
  * 20: storage change above-ground biomass

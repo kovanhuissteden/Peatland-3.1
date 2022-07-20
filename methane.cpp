@@ -141,7 +141,7 @@ void Methane()
     } else if (TopSat > 1) dc(TopSat - 1) = dc(TopSat - 1) + ebullflux; else  dc(1) = dc(1) + ebullflux;
     ccn = cc + dc;
     planttrans (plantflux, CH4oxidation, CO2production, plantrate, ccn); // plant flux
-    dc -= plantrate * dth;
+    dc = -plantrate * dth;
     // CH4oxidation *= dth;  // CH4 consumed by plant oxidation in time step (NB CH4oxidation = CO2production in planttrans)
     totalCO2 += CO2production * dth; // total CO2 production from oxidation
     plantox += CO2production.Sum(); // Total plant oxidized CH4
@@ -149,6 +149,7 @@ void Methane()
     MethaneFlux(2) = MethaneFlux(2) + plantflux * dth; // record plant flux
     ccn += dc;
     methaneprod(prod, cres, ccn, CO2production, anaerob, Cremoved, ttime); // methane production including oxidition by methanotrophs above water table
+    //cout << (prod.Sum() + anaerob.Sum() + CO2production.Sum()) << " " << Cremoved.Sum() << endl;
     cres -= Cremoved * dth;
     totprod += prod * dth;  // total CH4 production
     anaerobCO2 += anaerob * dth; //Anaerobically procuced CO2
@@ -187,18 +188,16 @@ void Methane()
   // anarobicCO2 and CO2production from oxidation also have to be added proberly to total anaerobc CO2 and CO2 from methane
   // this is done in function CollectCO2(); CO2 from oxidation is added to top layer
   CarbonBalance(StepNr, 14) = totalCO2.Sum() / 1000.0;   // add oxidized CH4 to carbon balance tracking
-  CO2FromMethaneOx = totalCO2 * CONVCH4CTOKGC;                     // CO2 evolved from methane oxidation, convert from millimol CH4 to kg C
+  CO2FromMethaneOx = totalCO2 * CONVCH4CTOKGC;                     // CO2 evolved from methane oxidation, convert from millimol CH4-C to kg C
   // CarbonBalance(StepNr, 16) = anaerobCO2.Sum() / 1000.0;
   anaerobCO2 = anaerobCO2 * CONVCH4CTOKGC;   // convert anaerobically generated CO2 to kg C per timestep
   AnaerobSum += anaerobCO2;
   CarbonBalance(StepNr, 13) = MethaneFlux.Sum() / 1000.0;   // add methane carbon to carbon balance
-  
   MethaneFlux *= MOLWEIGHTCH4 / (24 * Timestep);             // conversion from millimoles per timestep to mg per hr
   TotalMethane.PutData(StepNr, 2, MethaneFlux);                     // store current flux in result array
   TotalMethane(StepNr, 1) = DayNr;
   TotalMethane(StepNr, 5) = MethaneFlux.Sum();
   // CH4 soil storage change; + is increase; conversion from millimol/m3 the summed mol over layers
-  //CarbonBalance(StepNr, 17) = ((MethProfile.Sum() - ccstart.Sum()) /1000.0) / LayerThickness; 
   CarbonBalance(StepNr, 17) = (cc.Sum() - ccstart.Sum()) /1000.0; 
   // convert methane profile back to millimol/m3 in soil pore volume for registration in output in the same unit as the initial profile
   mp = (MethProfile / PoreVol) / LayerThickness;
@@ -276,7 +275,6 @@ void planttrans(double &flux, Matrix &CH4oxidation, Matrix &CO2production, Matri
     // rate = rate * (1.0 - MethanePlantOx);
     flux = rate.Sum();   // total flux in miilimol CH4 over all layers summed
     flux *= (1.0 - MethanePlantOx);
-
 }    // end planttrans
 
 
@@ -288,8 +286,7 @@ void methaneprod(Matrix &prod, Matrix &labileC, Matrix &mc, Matrix &oxidized, Ma
 
 Input:
 
-c       : total labile C soil in micromol;
-pc      : peat C
+labileC : total labile C soil in micromol;
 mc      : methane concentration
 
 Output:
@@ -366,6 +363,5 @@ anaerob: anaerobically prduced CO2
       prod(i) = pprod - pcons;                      // total production minus consumption
     }
   }
-  //oxidized.Disp();
 }    // end methaneprod
 

@@ -80,7 +80,6 @@ void OrgProd()
   {
         case 0: PrimProd = SimpleProd(); break;
         case 1: PrimProd = TemperatureProd(); break; // soil temperature dependent prduction
-            /* case 2: PrimProd = TemperatureThornley(); break; OBSOLETE */ 
         case 2: PrimProd = NPPData(StepNr);  // primary production from imported data
         case 3: PrimProd = RadProd(); break; // Haxeltine and Prentice model, PAR data supplied
         case 4: PrimProd = RadProd(); break; // Haxeltine and Prentice model, PAR calculated from cloud cover
@@ -164,14 +163,7 @@ void OrgProd()
   minBiomass = minLAI * LAICarbonFraction;
   oldBiomass = BioMass;
   if (ProductionModel < 3) {  // Litter production by dying off of above-ground biomass
-      litter = BioMassSenescence * BioMass * Timestep; // a distinction between production models is maintianed for keeping compatibility with earlier versions of the model
-     /* LitterLayer += litter;
-      BioMass -= litter;
-      if (BioMass < minBiomass) {
-          BioMass = minBiomass;
-          cout << PRODUCTION_ERROR2 << endl;
-      }
-      CurrentLAI = BioMass / LAICarbonFraction; */
+      litter = BioMassSenescence * BioMass * Timestep; // a distinction between production models is maintained for keeping compatibility with earlier versions of the model
 // CHECK IF NO CARBON IS LOST HERE
   } else { // fraction of biomass shedded in autumn is dependent on decrease of LAI per time step
       if (LeafSenescence) { // autumn biomass senescence by temperare-driven decrease/increase of LAI;
@@ -182,12 +174,6 @@ void OrgProd()
       }
       if (CurrentLAI < minLAI) CurrentLAI = minLAI;
       litter = f_senescence * BioMass;
-      /*if (BioMass < minBiomass) {
-          BioMass = minBiomass;
-          cout << PRODUCTION_ERROR3 << endl;
-      }
-      if (oldBiomass > BioMass) litter = oldBiomass - BioMass; else litter = 0.0;
-      LitterLayer += litter;*/
   }
   if ((BioMass - litter) <= minBiomass) {  // litter should not be more than remaining minimum biomass
       litter = BioMass - minBiomass;
@@ -290,27 +276,6 @@ double TemperatureProd()
 
   return a;
 }
-
-/*double TemperatureThornley()
-// Primary production from temperature upper soil layer, temperature function cf Thornley (1998) with steepness parameter = 2
-{
-  double a, maxf, T, tfac, Tmin, Tmax, refT, q, m;
-
-  Tmin = ProdTFunc(1);				       // minimum temperature from ProdTFunc(1); ProdTFunc(2) is ignored, max T set to 45
-  Tmax = 45.0;
-  q = 2; 					       // steepness parameter, provisionally fixed
-  refT = 20;					       // fixed reference temperature
-  m = (refT-Tmin) * (Tmax-refT);
-  maxf = ((pow((Tmax - ((q+2)/q)*Tmin) / ((q+1)/q), q)) * ((Tmax+Tmin) / (q+1))) / m;	// maximum of temperature function
-  T = SoilTemp(1);
-  if ((T >= ProdTFunc(1)) && (T <= Tmax))              // sinusoidal approach of temperature optimum function
-  {
-    tfac = ((pow(T - Tmin,q))*(Tmax - T)) / (m * maxf);
-  } else tfac = 0;
-  a = Timestep * (MinProd + tfac * (MaxProd - MinProd));
-
-  return a;
-}*/
 
 
 double PARcalc()
