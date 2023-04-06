@@ -59,6 +59,9 @@ readmatrix  - reads a matrix
 #define ERRORMSG9     "Time series read error from file "
 #define ERRORMSG10    ": Unknown command line option."
 #define ERRORMSG11    "Cannot open file: "
+#define ERRORMSG12    "Start or end dates are not correct."
+#define ERRORMSG13    "Number of columns in Harvest file must be 4"
+#define ERRORMSG14    "First harvest before start date. Please change."
 #define MSG1          "?             : displays command line options"
 #define MSG2          "v             : verbose - displays run information on console during model run"
 #define MSG3          "dir=directory : working directory for input and output files"
@@ -82,10 +85,31 @@ extern double LayerThickness;            // Thickness of depth step
 extern double TStepHeat;                 // time step (days) temperature model
 extern double DStepHeat;                 // minimum depth step (m) temperature model
 extern double MaxDepthHeat;              // maximum depth temperature model (m)
+
 extern double Timestep;                  // model timestep
 extern int NrOfSteps;                    // number of time steps
 extern int StartDay;                     // Julian day nr starting day
-extern double StartYear;                 // starting year
+extern int StartMonth;     
+extern int StartYear;                 // starting year
+extern int EndDay;
+extern int EndMonth;
+extern int EndYear;   
+
+extern int HDD;
+extern int HMM;
+extern int HYY;
+extern int Harvest_LOC;
+extern char HarvestFile[];
+extern Matrix HarvestData;
+extern int Harvest_LOC_END;
+extern int HarvestModel;
+extern int PARunits; // units in which PARData is given, 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
+
+extern char StartDate[];                // Start date DD/MM/YYYY
+extern char EndDate[];                  // End date DD/MM/YYYY
+extern int YEARdays;                    // Length of one year in days
+extern int NrOfYears;                   // Number of years in simulation  
+
 extern int ThermModel;                   // choice of soil thermal model:
 extern int WatertableModel;				 // choice for water table model: 0 = read from file, 1 = simple sinusoidal 2 = extended 'Yurova' type model
 extern double DensOrg;                   // density organic matter in peat (density of wood) kgm-3
@@ -107,6 +131,7 @@ extern double CondQuartz;                 // thermal conductivity quartz
 extern double Rgas;                      // Gas constant
 extern double MethaneDiff;               // diffusion of methane in air in m2/d
 extern double MethaneDiffWater;          // diffusion of methane in water
+
 extern double DissimAssimRatio;          // Assimiltion/Dissimilation ratio
 extern double ResistFrac;                // Fraction of decomposited organic material that is transferred to resistant humus fraction
 //extern double MolAct;                    // molecular activation energy aerobic organic matter decomposition
@@ -116,8 +141,10 @@ extern double HalfSatPoint;              // half activity saturation point for c
 extern double RootAeration;              // Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
 extern double PrimingCorrection;         // Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
 extern Matrix Kdecay;                    // SOM decomposition constants for each reservoir
+
 extern Matrix AerobicQ10;                // Q10 for each reservoir
 extern double AnaerobicDARatio;          // Assimiltion/Dissimilation ratio anaeroob
+
 extern Matrix KPeatCN;                   // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
 extern double ShootsFactor;              // mass fraction root growth against shoot growth
 extern Matrix RespFac;                   // factor of primary production that is respirated during growth
@@ -164,7 +191,9 @@ extern double MethaneAir;                // Methane concentration in the atmosph
 extern double MethaneTRef;               // Reference temperature for temperature sensitivity methane production
 extern double MethanePType;              // Vegetation type factor for gas transport by plants range: 0-15
 extern double MethanePlantOx;            // Fraction of methane that is oxidized during transport in plants
+
 extern double CO2CH4ratio;              // Molar ratio between CH4 and CO2 production; for acetate splitting this is 1, for CO2 reduction 0
+
 extern double PartialAnaerobe;           // Determines the slope of the relation of partial anaerobe soil fraction above the water table to soil saturation, >1
 extern double AnaerobeLagFactor;	     // Determines time lag for development of sufficiently anaerobic conditions after saturation of a layer
 extern Matrix InitMethane;               // Initial methane concentration profile
@@ -203,7 +232,9 @@ extern Matrix pFVal;                     // suction potentialsfor pF curves
 
 extern Matrix Porosity;                  // porosity of soil layers, can be specified or calculated from organic matter percentage and dry bulk density
 extern Matrix ProfileOutput;             // determines which vertical profiles are sent to log files
-extern int ProductionModel;              // Production model: 0 for simple sinusoidal function; 1 for production dependent on temperature of upper soil layer
+extern int ProductionModel;              // Production model: 0 for simple sinusoidal function; 1 for production dependent on temperature of upper soil layer, 2 for data supplied externally, 3 - 4 for photosynthesis models
+extern double GreenBiomassRatio;        // Ratio of photosyntesizing biomass to total bioamass for ProductionModel 3
+extern Matrix HarvestCorrection;            // Correction of GPP after harvest with reduction factor directly after harvest (first) and period of recovery in days (second)
 extern Matrix TotalMethane;              // storage matrix for CH4 fluxes ; 1st element: day number
 extern Matrix ReservoirTime;             // storage matrix for CO2 per reservoir per timestep ; 1st element: day number
 extern Matrix LayerTime;                 // storage matrix for CO2 per layer per timestep ; 1st element: day number
@@ -245,6 +276,7 @@ extern double Q10Anaerobic;                    // Q10 anaerobic decomposition
 extern double KLitter;                   // decomposition constant above-ground litter and standing dead biomass
 extern int AnaerobicCO2;                   // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 extern Matrix LayerAnaerobic;             // Anaerobic CO2 per layer
+extern double HarvestLitter; // fraction of harvest that is left as litter at each harvest
 extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
 extern Matrix PeatDecay;                        // logs true loss of peat matrix
 
@@ -298,6 +330,36 @@ int readTseries(double *d, const char *filename, const int maxrows, const int co
     maxrows : the maximum number of data rows to be read
     cols    : the number of data columns                          */
 
+int readHarvest(char *harvestIN);
+
+void checkHarvestDate();
+
 void WriteOutput();
 /* writes methane fluxes, CO2 fluxes and plant production/respiration to output files */
+
+
+bool Assign_Start(string StartDate);
+// Assigns values to StartDay, StartMonth, StartYear.
+
+bool Assign_end(string EndDate);
+// Assigns values to EndDay, EndMonth, EndYear.
+
+bool isALeapYear(int year);
+// Checks if year is a leap year
+
+void isFebruary(bool LeapYear, int daystring);
+// If month is February in Start or End year, number of days in month is checked.
+
+int assignYEARdays(int year);
+// Assigns YEARdays depending on whether it is a leap year.
+
+// Counts the number of days between two dates.
+int count_days(int day_1 = StartDay, int month_1 = StartMonth, int year_1 = StartYear, int day_2 = EndDay, int month_2 = EndMonth, int year_2 = EndYear);
+
+int daysinmonth(int month, int year);
+// Checks how many days should be in a month
+
+int count_years(int year_1 = StartYear, int year_2 = EndYear);
+// Counts the years of the model simulation.
+
 

@@ -33,11 +33,14 @@ NrLayers = 15;          % number of layers in soil profile
 LayerThickness = 0.1;   % layer thickness
 TStepHeat = 0.01;       % time step (days) temperature model
 DStepHeat = 0.1;        % minimum depth step (m) temperature model
-MaxDepthHeat = 3.0;     % maximum depth temperature model (m)
-Timestep = 1;           % time step (days) value 1-10
-NrOfSteps = 365;        % number of time steps
-StartDay = 1;           % Julian day nr starting day
-StartYear = 1900;       % starting year to calculate leap years 
+MaxDepthHeat = 5.0;     % maximum depth temperature model (m)
+Timestep = 1;                          		% Time step (days)
+NrOfSteps = 8036;                        	% number of time steps
+StartDay = 1;                           	% Julian day nr starting day
+StartYear = 2000;                       	% start year of simulation
+StartDate = "01/01/2000";               	%DD/MM/YYYY
+EndDate = "31/12/2021";                 	%DD/MM/YYYY
+
 ThermModel = 0;         % choice of soil thermal model:
                         % 0 for diffusivity varying with layer physical properties
                         % 1 for constant diffusivity
@@ -77,6 +80,7 @@ DissimAssimRatio = 2.3;                         % Dissimilation/Assimilatio rati
 ResistFrac = 0.1;                               % Fraction of decomposited organic material that is transferred to resistant humus fraction
 % this means a Q10 value of 2.96, can be computed from Q10 values according to: MolAct = -8314 ln Q10 / (1/(Tref+273)-1/(T+273))
 Cfrac = [0.48, 0.38 0.38 0.38 0.38 0.38 0.55]; % Carbon fraction (kg/kg) each SOM reservoir
+
 pFpoints = [2.7 4.2; 1 0.2];                    % curve for determining environmental correction factor for dryness
 HalfSatPoint = 0.1;                             % half activity saturation point for correction factor aeration
 RootAeration = 0;                               % Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
@@ -95,10 +99,11 @@ ProductionModel = 2;                    % Production model:
                                         % 0 for simple sinusoidal function;
                                         % 1 for production dependent on temperature of upper soil layer
                                         % 2 for production data read from file, variable NPPFile has to be defined (kgC/m2/day)
-                                        % 3 for photosynthesis model, PAR data supplied in PARFile (Joule cm-2 per day)
-                                        % 4 for photosynthesis model, cloud cover data supplied in PARFile (fractions 0 - 1), PAR calculated, variable Latitude defined
-                                        % 5 for photosynthesis model for tundra, Shaver et al, J. Ecology 2007 (not depending on CO2 concentration) PAR data supplied in PARFile (J cm-2 per day)
-                                        % 6 for photosynthesis model for tundra, Shaver et al, J. Ecology 2007 (not depending on CO2 concentration) cloud cover data supplied in PARFile
+                                        % 3 for photosynthesis model cf Haxeltine and Prentice
+                                        % 4 for photosynthesis model for tundra, Shaver et al, J. Ecology 2007 (not depending on CO2 concentration) 
+PARunits = 0;                           % units in which PARData is given for ProductionModel 3 and 4,
+                                        % 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
+                                        % J cm-2 is the normal reporting unit for public weather station data 
 NPPFile = "";                           % external file for net primary productivity
 PARFile = "";                           % file with incoming solar radiation data (J cm-2) or cloud cover data for ProductionModel model 3 or 4
 Latitude = 50.0;                        % site latitude for ProductionModel 4
@@ -108,39 +113,51 @@ Phenology = [1 10.0 150 2.0 1 0.9 30 240];     % Phenology parameters production
                                         % is littered in autumn, and at the same time determines the minimum winter LAI by multiplication with the maximum LAI
                                         % seventh number is the day number of the earliest start of the growing season
                                         % last number is the day of the year that autumn starts
+GreenBiomassRatio = 0.75;                % Ratio of photosyntesizing biomass to total biomass for ProductionModel 3, high for grasslands, lower for woody vegetation
 KBeer = 0.5;                            % Beer's law constant for photosynthesis models, values around 0.5
-LAICarbonFraction = 0.1;                % relates leaf area index to kg C/m2 (kg C/m2 per unit of LAI)
+LAICarbonFraction = 0.023;              % relates leaf area index to kg C/m2 (kg C/m2 per unit of LAI)
 PhotoPar = [0.5 0.05 16.0 0.03];        % Parameters for photosynthesis model 5 for tundra, Shaver et al, J. Ecology 2007
                                         % 1: PlantResp0 Plant respiration at zero degrees 0.4-1.5
                                         % 2: Temperature sensitivity factor plant respiration 0.03 - 0.07
                                         % 3: light-saturated photosynthetic rate per unit leaf area (??mol m???2 leaf s???1) val. 6-20
                                         % 4: initial slope of the light response curve (??mol CO2 ??mol???1 photons) val 0.05???0.12
-AmbientCO2 = 385.0;                     % Ambient CO2 concentration
+
+AmbientCO2 = 415.0;                     % Ambient CO2 concentration
 CO2File = "";                           % File with variable CO2 values, for each simulation year one value + 1 extra value, only to be used with ProductionModel 3/4
                                         % if an empty string, the value of AmbientCO2 is used for all years
 ShootsFactor = 0.7;                     % mass fraction of primary production that consists of shoots; the remainder is root growth (Kuikman 1996: 0.85-0.65)
 RespFac = [0.015 0.01];                  % factor of primary production that is respirated during growth
                                         % first value is growth respiration, second maintenance respiration
+
 ProdTFunc = [5 25];                     % temperature dependent production rate model 1; 1st number is minimum temperature, 2nd optimum temperature
+
 SatCorr = 0.0;                          % correction of production for saturation of topsoil, depresses production at high saturation, switched off when 0
 GrowFuncConst = 4.0;                      % proportionality constant growth functioen - primary productivity for plant transport in methane model
 SpringCorrection = 0;                   % Correction (0-1) for stronger exudation in spring; influences priming and exudate production, if 0, disables spring correction
                                         % correction is a factor of 1+SpringCorrection
+
 MaxProd = 0.005;                        % Maximum primary productivity (kgC/m2/day)
 MinProd = 0.0;                          % Minimum primary productivity
 MaxRootDepth = 0.3;                     % maximum root depth (m)
 NoRootsBelowGWT = 1;                    % if 1, no roots will grow below groundwater table (No telmatophytes)
 RootLambda = 5.0;                        % Decay rate exponential root distribution function; larger values result in steepr decrease of root mass with depth
+
 RootSenescence = 0.003;                 % root senescence factor = proportion of root mass that dies during each time step
-InitRoots = 0.7;                        % initial root mass in all layers
+InitRoots = 0.05;                        % initial root mass in all layers
 ExudateFactor = 0.2;                    % mass fraction of of below-ground production that consists of exudates
-BioMass = 0.3;                          % initial above ground biomass kg C /m2 (standing crop)
+BioMass = 0.03;                         % initial above ground biomass kg C /m2 (standing crop)
                                         % NB: this is excluding the root mass, which is specified in InitRoots
 LitterLayer = 0.3;                      % organic matter stored in above ground litter layer, in kg C / m2
+
 LitterConversion = 0.001;                % Conversion factor of daily conversion of above ground to below ground litter at reference temperature Tref; the factor is temperature adjusted such that at 0 degrees the conversion factor is also 0
 BioMassSenescence = 0.001;			        % biomass senescence at each DAY as fraction of above-ground biomass
 Harvest = [180 0.75; 240 0.75];         % harvest dates (1st column) and fraction of biomass harvested (2nd column)
+HarvestCorrection = [0.1 7];            % Correction of GPP after harvest with reduction factor directly after harvest (first) and period of recovery in days (second)
+HarvestFile = "";				          % Textfile with harvest data: year, month, day, fraction of bimass harvested; if this is an empty string
+% the harvest parameter is used with fixed harvest dates each year
+HarvestLitter = 0.05;                   % fraction of harvest that remains as litter
 Manure = [80 0.1; 200 0.1];             % Manure application dates (column 1) and quantity (column 2) in kg C/m2/timestep
+
 Grazing = [0 130 0.0001 0.00005; 250 365 0.0001 0.00005];
 % Parts of the year in which grazing occurs, each row is a range of days
 % followed by the amount of biomass removed (kg C m2/day and the amount of excretion (kg C m2/day)
@@ -150,6 +167,7 @@ ManureLayers = [0.5 0.75; 0.3 0.25; 0.2 0];
 
 % PARAMETERS METHANE MODEL
 
+
 MethaneReservoirs = [0.0001 1 1 1 0.5 0 0];   % This parameter tells which reservoirs are summed for calculating methane production from easily decomposed
                                          % organic matter reservoirs. It allows to delete or reduce some reservoirs; 
                                          
@@ -158,12 +176,14 @@ MethaneR0 = 0.4;                         % Methane production rate factor for fr
                                          % Walther & Heimann 2000: values between 0.3 and 0.6 at high latitude sites and 2.8 at tropical site
 CO2CH4ratio = 0.5;                       % Molar ratio between CH4 and CO2 production; for acetate splitting this is 0.5, for CO2 reduction 0.0,
                                          % may also be a number between 0.0 and 0.5; the smaller the value, the larger amount of CH4 is produced over CO2
+
 MethanepHCorr = 0.10;                    % for every PH unit lower or higher than neutral, MethanepHCorr*R0 is added to R0
 MethaneQ10 = 6.0;                        % Q10 value for temperature correction methane production; range 1.7 - 16 ref. in Walther & Heimann 2000
                                          % value of 6 based on Walther & Heimann 2000
 MethaneOxQ10 = 1.4;                      % Q10 value for temperature correction methane oxidation; range 1.4 - 2.1, ref. in Walther & Heimann 2000
 MethaneVmax = 5;                         % Vmax Michaelis-Menten eq methane oxidation micrMol/hr range 5-50
                                          % SITE-SPECIFIC PARAMETER, CAN BE USED TO TUNE THE MODEL; values are likely to be low at low water table sites
+
 MethaneKm = 5;                           % Km Michaelis-Menten eq methane oxidation microMol range 1-5
 MethaneMaxConc = 500;                    % maximum methane concentration in pore water (millimol/m3 in soil pore volume, including bubbles)
                                          % in Walter & Heimann this appears to be in micromol/liter; the units mentioned there should be divided by 1000 to convert
@@ -171,15 +191,18 @@ MethaneERateC = 1.0;                     % Ebullition rate constant (hr-1); a va
 MethanePRateC = 0.01;                    % Rate constant for plant transport of methane (1/hr)
                                          % value should not be higher than 0.1!
 MethaneAir = 1.8;                        % methane concentration in the atmosphere - ppmv
+
 MethaneTRef = 10;                        % reference temperature for temperature sensitivity methane production
                                          % if negative, the average yearly temperature is selected as reference temperature
 MethanePType = 15;                       % Vegetation type factor for gas transport by plants range: 0-15
 MethanePlantOx = 0.9;                    % Fraction of methane that is oxidized during transport in plants
 PartialAnaerobe = 0;					% Determines the slope of the relation of partial anaerobe soil fraction above the water table  to soil saturation, value >1; if <1, no partial anarobe fraction is assumed to be present
+
 AnaerobeLagFactor = 0.0;				% Determines time lag for development of sufficiently anaerobic conditions after rapid saturation of a layer
 InitMethane = [1 1 40 80 100 150 300 400 450 500 500 500 500 500 500];
                                           % Initial methane concentration profile (millimol/m3 in soil pore volume, including bubbles)
                                           
+
 
 
 % SITE SPECIFIC PARAMETERS DEFAULT VALUES ONLY, DEFINE THESE MORE SPECIFICALLY IN SITE-SPECIFIC PARAMETER FILE
@@ -198,7 +221,9 @@ GwFile = "";                             % file name where groundwater time seri
                                          % if this is an empty string a sinusoidal time series will be assumed
 T_average = 10.5;                        % average yearly temperature
 T_amplitude = 7.75;                      % amplitude of temperature throughout the year
+
 T_ref = 11.0;                            % reference temperature for correction of decay constants
+
 ThermDiff = 0.0136;                      % thermal diffusivity, if not defined it is estimated from soil properties
                                          % this parameter is not used if ThermModel == 0
 Tdata = "";                              % data file with temperature time series; if empty, a sinusoidal temperature time series will be used

@@ -31,7 +31,6 @@
   
   7 april 2022
   RootLambda was not used in calculating root distribution; fixed
-
  ***************************************************************************/
 
 
@@ -46,6 +45,7 @@ using namespace std;
 #include "matrix.h"
 #include "general.h"
 #include "initialize.h"
+#include "readparams.h"
 #include "heat.h"
 #include "water.h"
 
@@ -128,13 +128,13 @@ void SOMResInit()                                     // calculates organic C (k
   NewSOM = InitSOM;
   OldSOM = InitSOM;
   OldLitter = LitterLayer;
+
 }
 
 void InitHeat()
 /* computes heat capacity and thermal conductivity from organic matter content and pore volume
  cf Hillel (1998) and Luckner & Schestakow (1991)                                           */
 
-//T_average: voor heat model = 0, calculate Taverage from data!
 {
   int i, a, l, j;
   double theta_sat, theta_wilt, f0, t, d, w;
@@ -204,12 +204,22 @@ double thermcond(double f, double l1, double l2)
   return lambda;
 }
 
-void InitTime()           // initializes time system
+
+void InitTime()           
+// initializes time system
 {
- 
-  DayNr = StartDay - 0.5 * Timestep;         // day number since day 1 of the year in which the simulation started
-  Year = StartYear;
-  DayOfTheYear = DayNr;
+
+    DayOfTheYear = count_days(1, 1, StartYear, StartDay, StartMonth, StartYear); 
+    // Julian day of StartYear
+
+    DayNr = DayOfTheYear - 0.5 * Timestep;         
+    // day number since day 1 of the year in which the simulation started
+    
+    CalendarYear = StartYear;
+    YearCounter = 1;
+    Month = StartMonth;
+    YEARdays = assignYEARdays(StartYear);
+   
 }
 
 
@@ -489,6 +499,7 @@ Decompositon constant for peat is corrected by C/N ratio of layers */
     SplitRes(i, 3) = 1.0 / (1.0 + AnaerobicDARatio);    // partitioning coefficient to microbial biomass from anaerobic CO2
   }
 /*  KPeat.Resize(NrLayers);                               // C/N ratio dependent k for peat REMOVED; NOT USED IN THE MODEL!
+
   for (i = 1; i <= NrLayers; i++)
   {
     a = (int)Layers(i,4);                               // soil horizon index
@@ -521,7 +532,7 @@ void InitMethaneModel()
   MethaneFlux.Resize(3);
   MethaneR0Corr.Resize(NrLayers);                     // pH dependent methane production rate
   MethaneAir = MethaneAir * 1.218581;
-  // concentration in the air is recalculated here from ppmv to micromoles CH4-C in a 10 cm layer above the surface 
+  // concentration in the air is recalculated here from ppmv to millimoles CH4-C in a 10 cm layer above the surface 
   // at standard seal level pressure and the current air temperature
   // MethaneAir = MethaneAir * 0.000001 * 1000 * 0.1 * 101325 / 8.3145;
   // MethaneAir = MethaneAir * (ppmv to partial pressure) * (moles to millimoles) * (m3 to 10 cm layer) * standard pressure / gas constant
@@ -533,6 +544,7 @@ void InitMethaneModel()
   MethaneVmax = MethaneVmax / LayerThickness;
   MethaneReservoirSum = MethaneReservoirs.SumRow(1);
   // MethaneReservoirs.Transp();                         // transpose methane reservoirs array for easier multiplication with carbon reservoirs
+
   for (i = 1; i <= NrLayers; i++)
   {
     a = (int)Layers(i,4);                             // soil horizon index
@@ -542,8 +554,10 @@ void InitMethaneModel()
       cout << INIT_ERROR3 << endl;
       exit(EXIT_FAILURE);
     }
+
     mc = mc * LayerThickness;
   // convert MethaneR0 from millimol/h/m3 to millimol/hr/layer volume
+
     MethaneR0Corr(i) = mc;
   }
 }

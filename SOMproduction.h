@@ -19,8 +19,8 @@
 
 #define PRODUCTION_ERROR1 "Primary production model: negative root mass, decrease RootSenescence parameter"
 #define PRODUCTION_ERROR2 "Primary production model: above-ground Biomass below minimum, check BioMassSenescence, LAICarbonFraction parameter"
-
-
+#define PRODUCTION_ERROR3 "Primary production model: PARunits parameter specified incorrectly, should be 0, 1 or 2"
+extern BOOLEAN Verbose;
 extern double DayOfTheYear;                  // Julian day number of the midpoint of the simulated time step relative to the current year;
 extern int ProductionModel;                  // Production model: 0 for simple sinusoidal function; 1 for production dependent on temperature of upper soil layer
 extern double MaxProd;                       // Maximum primary productivity (kgC/m2/day)
@@ -53,6 +53,8 @@ extern Matrix NewSOM;                        // SOM reservoirs to be changed in 
 extern Matrix ProfileOutput;                 // determines which vertical profiles are sent to log files
 extern double BioMass;                       // above ground biomass kg C /m2 (standing crop)
 extern Matrix Harvest;                       // harvest dates (1st column) and fraction of biomass harvested (2nd column)
+extern int HarvestModel;                     // 1 = harvest amount/dates same every year. 2 = harvest amounts/dates defined in input file per year.
+extern Matrix HarvestCorrection;            // Correction of GPP after harvest with reduction factor directly after harvest (first) and period of recovery in days (second)
 extern Matrix Grazing;                       // Parts of the year in which garazing occurs, each row is a range of days
 extern double BioMassSenescence;             // biomass senescence at each DAY as fraction of above-ground biomass
 extern Matrix RespFac;                       // factor of primary production that is respirated during growth
@@ -68,6 +70,7 @@ extern char NPPFile[256];                    // file with primary production dat
 extern double GrowingDegreeDays;             // growing degree days for phenology and photosynthesis model
 extern Matrix TData;                           // Air or soil temperature data from file Tfile
 extern Matrix PARData;                         // photosynthetic active radiation or cloud cover data
+extern int PARunits; // units in which PARData is given, 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
 extern double Latitude;                      // Latitude of site in degrees (north positive)
 extern Matrix Phenology;                // Phenology data for production model 3 and 4
 extern ofstream *output8;                 // output stream npp for production model
@@ -80,7 +83,7 @@ extern double LitterLayer;              // organic matter stored in above ground
 extern double LitterConversion;         // Conversion factor of daily conversion of above ground to below ground litter at reference temperature Tref; the factor is temperature adjusted such that at 0 degrees the conversion factor is also 0
 extern double T_ref;              // reference temperature for correction of decay constants
 extern double CurrentLAI;           // leaf area index
-extern double StartYear;                 // starting year
+extern int StartYear;                 // starting year
 extern double Year;                        // current simulation year
 extern double KBeer;                    // Beer's law constant for photosynthesis models, values around 0.5
 extern Matrix PhotoPar;                 // Parameters for photosynthesis model 5 for tundra, Shaver et al, J. Ecology 2007
@@ -92,6 +95,15 @@ extern double HarvestGrazing;             // total of harvest and grazing in one
 extern double TotalManure;                // total of manure added in one time step
 extern double OldLitter;                 // For calculation of storage change of litter layer
 extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
+extern double GPP;                        // Gros primary production
+extern int HdayNr;
+extern int HYY;
+extern double Harv_height;
+extern double HDcount;                  // Counts days after harvest
+extern int CalendarYear;
+extern double HarvestLitter; // fraction of harvest that is left as litter at each harvest
+extern double GreenBiomassRatio;        // Ratio of photosyntesizing biomass to total bioamass for ProductionModel 3
+extern double LAIovershoot;                    // Allocates more primary production to below-ground biomass if primary production model causes LAI to overshoot its maximum
 
 void OrgProd();
 /* Net Primary Production and ists partitioning among roots and shoots */
@@ -119,7 +131,13 @@ double TundraProd();
 /* Primary production from photosynthetically active radiation, for tundra, Shaver et al, J. Ecology 2007 */
 
 void DoHarvest();
-/* Harvest of biomass at selected dates */
+// Harvest according to HarvestModel
+
+//void DoHarvest(double minBiomass);
+/* Harvest of biomass at fixed dates */
+
+//void DateHarvest(double minBiomass);
+/* Harvest of biomass at selected dates that are different for each year*/
 
 void DoGraze();
 /* grazing of biomass */
@@ -137,3 +155,5 @@ void CollectBioMass();
    4. Plant respiration
    5. Net CO2 flux incl. soil respiration
 */
+
+void checkHarvestDate();

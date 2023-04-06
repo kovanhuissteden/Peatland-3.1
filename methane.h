@@ -19,11 +19,14 @@
 
 #define METHANE_ERROR1 "Methane model: unlikely high plant transport"
 #define METHANE_ERROR2 "Negative CH4 concentration! Numerical instability!"
-#define METHANE_ERROR3 "Soil methane concentration > 5.0e5"
-#define MAXSOILCH4 5.0e5
+#define METHANE_ERROR3 "Soil methane concentration > 1.0e3"
+#define METHANE_ERROR4 "High number of time steps needed for soving CH4 model"
+#define MAXSOILCH4 1.0e3
 //#define CONVCH4CTOKGC 0.012011 // based on moles CH4
 #define CONVCH4CTOKGC 1.2011e-5   // conversion from millimoles CH4-C to kg C
-
+#define CONVCH4TOC 12.011e-9
+#define MAXMODELSTEPS 1440 // maximum number of methane model time steps : 1 minute
+#define MINMODELSTEPS 48 // minimum number of methane model time steps : 30 minutes
 
 /************************ GLOBAL VARIABLES ***********************************/
 
@@ -54,6 +57,7 @@ extern double MethanePRateC;            // Rate constant for plant transport of 
 extern double MethanePType;             // Vegetation type factor for gas transport by plants range: 0-15
 extern double MethanePlantOx;           // Fraction of methane that is oxidized during transport in plants
 extern double PartialAnaerobe;           // Determines the slope of the relation of partial anaerobe soil fraction above the water table to soil saturation, >1
+
 extern Matrix AnaerobSum;                // sum of anaerobic CO2 per layer
 extern double AnaerobeLagFactor;	// Determines time lag for development of sufficiently anaerobic conditions after saturation of a layer
 extern Matrix LastSatTime;              // Time after last complete saturation of layer in days
@@ -61,16 +65,20 @@ extern Matrix RootDistrib;              // root distribution function
 extern double MethaneAir;               // Methane concentration in the atmosphere specified in ppmv, for calculations inside peatland in moles in a layer of 10 cm above surface
 extern double MethaneQ10;               // Q10 value for temperature correction methane production; range 1.7 - 16 ref. in Walther & Heimann 2000
 extern double MethaneTRef;              // Reference temperature for temperature sensitivity methane production
+
 extern Matrix MethaneR0Corr;            // pH dependent methane production rate
 extern double MethaneOxQ10;             // Q10 value for temperature correction methane oxidation; range 1.4 - 2.1, ref. in Walther & Heimann 2000
 extern double MethaneVmax;              // Vmax Michaelis-Menten eq methane oxidation micrMol/hr range 5-50
 extern double MethaneKm;                // Km Michaelis-Menten eq methane oxidation micrMol range 1-5
 extern double CO2CH4ratio;              // Molar ratio between CH4 and CO2 production; for acetate splitting this is 1, for CO2 reduction 0
+
 extern Matrix TotalMethane;             // storage matrix for CH4 results
 extern int StepNr;                      // time step number during iteration
 extern Matrix ProfileOutput;            // determines which vertical profiles are sent to log files
 extern ofstream *output3;               // methane profile output file
+
 extern Matrix CO2FromMethaneOx;           // CO2 from methane oxidation
+
 extern double DayNr;                    // midpoint of simulated timestep, relative to day 1 of the year in which the simulation started
 extern Matrix UnFrozen;                 // Unfrozen water content (kg water / kg dry soil)
 extern double DensWater;                // density of water at 0 degr C
@@ -81,6 +89,7 @@ extern double CurrentLAI;               // leaf area index
 extern double MinProd;                   // Minimum primary productivity
 extern Matrix TData;                      // Air temperature data from file Tfile
 extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
+
 /******************** FUNCTION DEFINITIONS ***********************************/
 
 void Methane();
@@ -91,6 +100,7 @@ void ebull(double &flux, Matrix &rate, Matrix &methconc);
     no entrapment cf Walter et al of bubbles is assumed, entrapment is assumed to occur within the same layer
     Input:
     mc		: methane concentration
+
     Output:
 
     flux		: total CH4 bubble flux
@@ -98,6 +108,7 @@ void ebull(double &flux, Matrix &rate, Matrix &methconc);
 */
 
 void planttrans(double &flux, Matrix &CH4oxidation, Matrix &CO2production, Matrix &rate, Matrix &methconc);
+
 /*  calculates plant transport flux and rate of removal of CH4 (sink) by plant transport
     Input:
     methconc:   methane concentration
@@ -122,9 +133,11 @@ mc      : methane concentration
 Output:
 
 prod    : total production or oxidation
+
 Cremoved: carbon removed from carbon reservoirs
 ttime   : time in days since start of model time step for calculation of rapid saturation depression of methane production
 oxidized: matrix with moles of methane oxidized per layer
 anaerob: anaerobically prduced CO2
+
 
 */

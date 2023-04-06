@@ -212,6 +212,7 @@ double SnowVegCorrection(const double tsurf)
 /* Corrects soil surface temperature in case of snow cover presence
 and also corrects for vegetation effect when there is no snow */
 {
+
   double daycount, tcorrect, a, vcorrect;
 
   tcorrect = tsurf;
@@ -253,11 +254,13 @@ and also corrects for vegetation effect when there is no snow */
       }
     }
   }
+
   //if (SnowDepth == 0.0) tcorrect = VegTScalingFactor * tsurf;			// correction for vegetation when no snow is present
   
   if (SnowDepth == 0.0) {
       vcorrect = VegTScalingFactor * CurrentLAI;
       if (vcorrect <= tcorrect) tcorrect = tcorrect - vcorrect;			// LAI dependent correction for vegetation when no snow is present
   }
+
   return tcorrect;
 } // end SnowCorrection

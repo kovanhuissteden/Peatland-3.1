@@ -29,26 +29,58 @@ using namespace std;
 #include "matrix.h"
 #include "bookkeep.h"
 #include "general.h"
+#include "readparams.h"
 
 void TrackTime()            // Time system, updated at end of each model time step
 {
     double t, d;
     int yearlength = 365;
+    int FinalMonthDay = 0;
 
-    if (Verbose) cout << "Timestep: " << StepNr << " finished " << endl;
-    t = Year / 4.0;
-    d = t - floor(t);
-    if (d == 0.0) yearlength = 366;  // adjust year length to leap year
-    t = Year / 1000.0;
-    d = t - floor(t);
-    if (d == 0.0) yearlength = 365;
+    YEARdays = assignYEARdays(CalendarYear); 
+    monthdays = daysinmonth(Month, CalendarYear);
+    FinalMonthDay = count_days(1, 1, CalendarYear, monthdays, Month, CalendarYear);
+    // Number of days in the year. Checks for leap year.
+
+    if (DayOfTheYear > FinalMonthDay)  Month += 1;
+
     StepNr++;                 // time step number
     DayNr += Timestep;        // day number since day 1 of the year in which the simulation started
     Timer += Timestep;        // day number since start of simulation
     DayOfTheYear += Timestep;
-    if (DayOfTheYear > yearlength)
+
+    
+    if (DayOfTheYear > YEARdays)
     {
-        DayOfTheYear = DayOfTheYear - yearlength;
         Year += 1;
+        DayOfTheYear = DayOfTheYear - YEARdays;
+        CalendarYear += 1;
+        YearCounter +=1;file:///home/ko/bedrijf/administratie/Uitgaande_facturen/factuur_Bloemendaal_2.pdf
+        Month = 1;
     }
+    if (Verbose) cout << "Timestep: " << StepNr << " finished " << endl;
 }
+
+
+void checkHarvestDate()
+{
+
+    int HDay = 1;
+
+    if ( Harvest_LOC < Harvest_LOC_END)
+    {
+        Harvest_LOC += 1; 
+        //go to next harvest date
+    }
+    else Harvest_LOC = Harvest_LOC_END; // no more harvest dates in file
+
+    HYY = HarvestData(Harvest_LOC, 1);
+    HMM = HarvestData(Harvest_LOC, 2);
+    HDay = HarvestData(Harvest_LOC, 3);
+    Harv_height = HarvestData(Harvest_LOC, 4);
+
+    HdayNr = count_days(1, 1, HYY, HDay, HMM, HYY); // used to compare to model simulation day nr.
+    HDD = HDay;
+}
+
+

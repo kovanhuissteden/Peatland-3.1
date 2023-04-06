@@ -48,12 +48,43 @@ int ThermModel = 0;                     // choice of soil thermal model:
 int WatertableModel = 1;				// choice for water table model: 0 = read from file, 1 = simple sinusoidal 2 = extended 'Yurova' type model
 Matrix Layers;                          // Layer boundaries
 double RefLevel;                        // surface datum, set at 0 at the start of the simulation
+
+// TIMESTEP VARIABLES
+
 int StepNr = 1;                         // time step number during iteration
 double DayNr;                           // midpoint of simulated timestep, relative to day 1 of the year in which the simulation started
 double Timer = 0;                       // starting point of simulated time step
 double DayOfTheYear;                    // Julian day number of the midpoint of the simulated time step relative to the current year;
 double Year = 0;                        // current simulation year
-double StartYear = 0.0;                 // starting year, may be fictive
+
+int YearCounter = 0;                        // current simulation year
+int CalendarYear;
+int Month = 0;                          // Current simulation month
+int StartYear = 1995;                 // starting year
+int EndYear = 2016;                             // Last year of simulations
+int StartMonth;
+int EndDay;
+int EndMonth;
+char StartDate[256]="";
+char EndDate[256]="";
+int YEARdays = 365;                     // Length of one year in days
+int NrOfYears;                                  // Number of years in simulation
+int monthdays;                       // Number of days in the current month.
+
+
+// HARVEST VARIABLES
+double Harv_height = 0.2;//harvest/mowing height [m]
+char HDate[256] = "";               // Harvest date
+int HDD = 1;
+int HMM = 6;
+int HYY = 2010;
+int Harvest_LOC = 0;
+int HdayNr = 100; //day of year of harvest
+int Harvest_LOC_END = 10; //number of lines in harvest file
+char HarvestFile[256] = "";
+int HarvestModel = 1; // 1 = harvest is same day/amount per year. 2 = harvest dates/amounts in harvest file.
+Matrix HarvestData;
+double HarvestLitter = 0.1; // fraction of harvest that is left as litter at each harvest
 
 /***************************Physical properties*****************************/
 double DensOrg = 1430;                  // density organic matter in peat (density of wood) kgm-3
@@ -78,11 +109,13 @@ double MethaneDiff = 1.7280;            // diffusion of methane in air in m2/d
 double MethaneDiffWater = 1.7280e-4;    // diffusion of methane in water
 
 /***************************Aerobic SOM decomposition*************************/
+
 double DissimAssimRatio = 2.3;          // Assimiltion/Dissimilation ratio aeroob
 double AnaerobicDARatio =30.0;      // Assimiltion/Dissimilation ratio anaeroob
 double ResistFrac = 0.1;                // Fraction of decomposited organic material that is transferred to resistant humus fraction
 //double MolAct = 74826;                  // molecular activation energy aerobic organic matter decomposition
 //!!!!!!!!!!!!!!!!!!! obsolete; will be replaced by Q10 for each OM reservoir
+
 Matrix Cfrac(7);                        // Carbon fraction (kg/kg) each SOM reservoir
 Matrix pFpoints(2,2);                   // Curve for determining environmental correction factor for dryness
 double HalfSatPoint = 0.1;              // half activity saturation point for correction factor aeration
@@ -93,6 +126,7 @@ Matrix AerobicQ10(7);                   // Q10 for each reservoir
 //Matrix KPeatCN(2);                      // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
 Matrix SplitRes;                        // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
 //Matrix KPeat;                           // Horizon-C/N dpendent peat decomposition rate
+
 int AnaerobicCO2 = 0;                   // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 Matrix KAnaerobic(7);                   // Anaerobic decomposition constants, for all SOM reservoirs
 Matrix LayerAnaerobic;                  // Anaerobic CO2 per layer
@@ -115,6 +149,8 @@ Matrix Phenology(8);                       // Phenology parameters; first number
                                         // second is the base for calculating the heat sum (growing degree days)
                                         // third the heat sum when maximum leaf area index
                                         // is reached, fourth the maximum LAI
+double LAIovershoot = 0.0;                    // Allocates more primary production to below-ground biomass if primary production model causes LAI to overshoot its maximum
+double GreenBiomassRatio = 0.75;        // Ratio of photosyntesizing biomass to total bioamass for ProductionModel 3
 double KBeer = 0.5;                     // Beer's law constant for photosynthesis models, values around 0.5
 Matrix PhotoPar(4);                     // Parameters for photosynthesis model 5 for tundra, Shaver et al, J. Ecology 2007
                                         // 1: PlantResp0 Plant respiration at zero degrees 0.4-1.5
@@ -140,6 +176,7 @@ double BioMass = 0.3;                   // above ground biomass kg C /m2 (standi
 double BioMassSenescence = 0.001;       // biomass senescence at each DAY as fraction of above-ground biomass
 Matrix Harvest;                         // harvest dates (1st column) and fraction of biomass harvested (2nd column)
 BOOLEAN Harvested = TRUE;               // indicates the occurrence of harvest
+Matrix HarvestCorrection(2);            // Correction of GPP after harvest with reduction factor directly after harvest (first) and period of recovery in days (second) element
 double LAICarbonFraction = 0.1;         // relates leaf area index to kg C/m2 (kg C/m2 per unit of LAI)
 Matrix Grazing;                         // Parts of the year in which garazing occurs, each row is a range of days
                                         // followed by the amount of biomass removed (kg C m2/day and the amount of excretion (kg C m2/day)
@@ -151,6 +188,7 @@ char NPPFile[256] = "";                 // file with primary production data for
 Matrix NPPData;                         // net primary production data from file NPPfile or model
 char PARFile[256] = "";               // file with PAR (photosynthetic active radiation, (J cm-2) or cloud cover data (cloud fraction, 0-1) for NPP model
 Matrix PARData;                         // photosynthetic active radiation or cloud cover data
+int PARunits; // units in which PARData is given, 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
 BOOLEAN LeafSenescence = FALSE;           // indicates whether leaf senescence may occur for photosynthesis model
 double AmbientCO2 = 385;                // Ambient CO2 concentration
 char CO2File[256] = "";                 // file with yearly averaged CO2 concentration for multi-year runs
@@ -159,16 +197,19 @@ double DayLength = 12;                  // Daylenght for photosynthesis model
 double LitterLayer = 0.0;               // organic matter stored in above ground litter layer, in kg C / m2
 double OldLitter = 0.0;                 // For calculation of storage change of litter layer
 double LitterDecomp = 0.0;              // Litter decomposition kg C per timestep
+double GPP;                              // Gros primary production
 double LitterConversion;                // Conversion factor of daily conversion of above ground to below ground litter at reference temperature Tref; the factor is temperature adjusted such that at 0 degrees the conversion factor is also 0
 
 /************************* Methane model ************************************/
 
 Matrix MethaneReservoirs(7);            // This parameter tells which reservoirs are summed for calculating methane production from easily decomposed
                                         // organic matter reservoirs. It allows to delete or reduce some reservoirs; peat always should be deleted
+
 double MethaneReservoirSum;             // sum of methane reservoirs
 double MethaneR0 = 0.4;                 // Methane production rate factor for fresh organic C microM/h
                                         // SITE-SPECIFIC PARAMETER, CAN BE USED TO TUNE THE MODEL
                                         // Walther & Heimann 2000: values between 0.3 and 0.6 at high latitude sites and 2.8 at tropical site
+
 double MethanepHCorr = 0.1;             // for every PH unit lower or higher than neutral, MethanepHCorr*R0 is added to R0
 double MethaneQ10 = 6.0;                // Q10 value for temperature correction methane production; range 1.7 - 16 ref. in Walther & Heimann 2000
 double MethaneOxQ10 = 1.4;              // Q10 value for temperature correction methane oxidation; range 1.4 - 2.1, ref. in Walther & Heimann 2000
@@ -185,6 +226,7 @@ double MethanePlantOx = 0.9;            // Fraction of methane that is oxidized 
 double PartialAnaerobe;                 // Determines the slope of the relation of partial anaerobe soil fraction above the water table to soil saturation, >1
 double AnaerobeLagFactor = 0.01;	    // Determines time lag for development of sufficiently anaerobic conditions after saturation of a layer
 double CO2CH4ratio = 0.5;               // Molar ratio between CH4 and CO2 production; for acetate splitting this is 0, for CO2 reduction 0.5
+
 Matrix InitMethane;                     // Initial methane concentration profile
 
 /******************************Water table and temperature*********************/
@@ -274,6 +316,7 @@ Matrix BioMassRec;                      // storage of biomass, primary productio
     9 Manure;
     10 LAI;
 */
+
 Matrix CarbonBalance;                   // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
 /*
  * 1: primary production V
@@ -301,6 +344,7 @@ Matrix CarbonBalance;                   // Carbon balance: primary production, C
 
 /*****************************Output Log files*********************************/
 
+
 Matrix ProfileOutput;                    // determines which vertical profiles are sent to log files
 ofstream *output1;                       // output log files
 ofstream *output2;
@@ -321,7 +365,9 @@ ofstream *output17;
 
 /*****************************Intermediary variables***************************/
 
+
 Matrix MethProfile;                      // methane concentration profile (mol/m3 in soil pore volume, including bubbles)
+
 Matrix OxconCH4;                         // oxygen consumption methane oxidation
                                          // NB: output of methane model - presently not used in the model
 Matrix InitSOM;                          // Initial carbon content (kg C per layer) in each SOM reservoir
@@ -331,28 +377,34 @@ int NrHeatLayers = 0;                    // number of layers temperature model
 Matrix TProfile;                         // temperature profile soil thermal submodel
 Matrix SoilTemp;                         // soil temperatures model layers, interpolated from TProfile
 Matrix PoreVol;                          // porosity each layer
+
 Matrix Saturation;                       // pore volume saturation with water (NB: actually the reverse of saturation, 1 - fraction of water filled pore space)
+
 Matrix OldSat;                           // saturation values at previous time step
 Matrix LastSatTime;                      // Time after last complete saturation of layer in days
 Matrix ThermDiffVar;                     // thermal diffusivity layer dependent diffusivity
 Matrix HeatLayers;                       // layer midpoints layers thermal model
 Matrix MethaneR0Corr;                    // pH dependent methane production rate
 double TotalPrimProd = 0;                // total primary production
+
 Matrix NewSOM;                           // SOM reservoirs to be changed in each iteration step (kg C per layer)
 Matrix OldSOM;                           // SOM reservoirs to be changed in each iteration step (kg C per layer) for calculation of storage change
 Matrix PeatDecay;                        // logs true loss of peat matrix; 1st column total peat decomposition; 2nd column aerobic decomposition
+
 int ManureCount = 0;                     // counter manure additions
-double PrimProd;                         // Primary production per time step
+double PrimProd;                         // Primary production per time step KgC/m2/timestep
 double Shoots;                           // Shoot production per time step
 double SpringFactor;                     // instantaneous value of spring correction, declared global for use by environmental correction SOM decomposition for priming effect
-double PlantRespiration;                 // plant respiration
+double PlantRespiration;                 // plant respiration kgCO2/m2/timestep
 Matrix CorrFac;                          // environmental correction factors for aerobic SOM decomposition constants k
 double CurrentGW;                        // Current water table during time step
+
 double PeatLoss = 0.0;                     // Totalized loss of peat C over all layers
 Matrix CO2;                              // CO2 carbon evolved from each layer and reservoir
 Matrix MethaneFlux;                      // Methane flux at surface;  1st value: ebullition flux; 2nd: plant mediated flux; 3d:diffusive flux
 int TopSat;                              // Index of first saturated layer
 Matrix CO2FromMethaneOx;                   // CO2 from methane oxidation
+
 double SnowDepth;                        // Actual snow heigth (m)
 double SnowStorage = 0.0;				 // water storage in snow (m)
 double SnowStartDay;                     // day at wich snow accumulation has started
@@ -371,5 +423,6 @@ double PotentialLAI = 0.0;               // potential leaf area index at timeste
 double PreviousLAI = 0.0;              // difference in LAI between successive time steps to calculate litter production in autumn
 double HarvestGrazing = 0.0;             // total of harvest and grazing in one time step
 double TotalManure = 0.0;                // total of manure added in one time step
+double HDcount = 0.0;                    // Counts days after harvest
 
 

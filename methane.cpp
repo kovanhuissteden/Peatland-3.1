@@ -81,7 +81,7 @@ void Methane()
   peat: column 1 NewSOM
 */
   int i, j, nsteps, a;
-  double dtfac, dt, dth, ebullflux = 0.0, plantflux = 0.0, plantox = 0.0, rho, next, prev, topflux, sc, part, ttime, methair, mressum;
+  double dtfac, dt, dth, ebullflux = 0.0, plantflux = 0.0, rho, next, prev, topflux, ttime, methair;
   Matrix CH4oxidation, cres, cresstart, va, diff, cc, ccn, ccstart, dc, totprod, ebullrate, plantrate, prod, CO2production, totalCO2, anaerob, anaerobCO2, Closs, Cremoved, mp;
 
 // ALL CALCULATIONS IN MILLIMOLES 
@@ -110,9 +110,14 @@ void Methane()
   }
   dtfac = 1 / (0.25 * pow(LayerThickness, 2.0) / diff.Max());  // determine safe time step for numerical solution of PDE
   nsteps = (int)(Timestep * dtfac);
-  if (nsteps < 96 * (int)Timestep)        // minimum time step is 0.25 hour (Timestep is in days)
+  if (nsteps < (MINMODELSTEPS * (int)Timestep))        // minimum time step is one minute (Timestep is in days)
   {
-    nsteps = 96 * (int)Timestep;
+    nsteps = MINMODELSTEPS * (int)Timestep;
+  }
+  if (nsteps > (MAXMODELSTEPS * (int)Timestep))
+  {
+      cout << METHANE_ERROR4 << endl;
+      exit(EXIT_FAILURE);
   }
   methair = MethaneAir / (273.15 + TData(StepNr));  // correction of surface aire CH4 concentration for air temperature
   dt = Timestep/nsteps;                    // PDE solution timestep in days
@@ -144,7 +149,7 @@ void Methane()
     dc = -plantrate * dth;
     // CH4oxidation *= dth;  // CH4 consumed by plant oxidation in time step (NB CH4oxidation = CO2production in planttrans)
     totalCO2 += CO2production * dth; // total CO2 production from oxidation
-    plantox += CO2production.Sum(); // Total plant oxidized CH4
+    //plantox += CO2production.Sum(); // Total plant oxidized CH4
     // previous: plant oxidation was added to top layer :     // CH4oxidation(1) += plantox * dth; 
     MethaneFlux(2) = MethaneFlux(2) + plantflux * dth; // record plant flux
     ccn += dc;
@@ -194,6 +199,9 @@ void Methane()
   AnaerobSum += anaerobCO2;
   CarbonBalance(StepNr, 13) = MethaneFlux.Sum() / 1000.0;   // add methane carbon to carbon balance
   MethaneFlux *= MOLWEIGHTCH4 / (24 * Timestep);             // conversion from millimoles per timestep to mg per hr
+  //MethaneFlux.Disp();
+  //cc.Disp();
+  
   TotalMethane.PutData(StepNr, 2, MethaneFlux);                     // store current flux in result array
   TotalMethane(StepNr, 1) = DayNr;
   TotalMethane(StepNr, 5) = MethaneFlux.Sum();
@@ -258,7 +266,6 @@ void planttrans(double &flux, Matrix &CH4oxidation, Matrix &CO2production, Matri
         fgrow = GrowFuncConst * CurrentLAI;
         if ((fgrow == 0.0) && (SoilTemp(1) > 0.0)) fgrow = GrowFuncConst * minLAI; // this allows for a minimum flux when LAI is zero and upper soil layer is not frozen
     } 
-    //cout << fgrow << endl;
     rate = RootDistrib * methconc;
     rate *= (MethanePRateC * MethanePType * fgrow); // CH4 removed in millimol CH4 per layer in integration time step
     for (i = 1; i <= NrLayers; i++)           // warning message for strange results - should not occur but can arise from erroneous parameters

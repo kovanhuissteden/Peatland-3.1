@@ -19,8 +19,6 @@
 
 /************************ GLOBAL VARIABLES ***********************************/
 
-
-
 extern Matrix CorrFac;            // environmental correction factors for aerobic SOM decomposition constants k
 extern Matrix RootMass;           // initial root distribution (kg C/m2 in each layer)
 extern Matrix Saturation;         // pore volume saturation with water
@@ -71,6 +69,7 @@ extern ofstream *output17;
 extern int StepNr;                // time step number during iteration
 extern Matrix ReservoirTime;      // storage matrix for CO2 per reservoir per timestep
 extern Matrix LayerTime;          // storage matrix for CO2 per layer per timestep
+
 extern Matrix CO2FromMethaneOx;     // CO2 from methane oxidation
 extern double DayNr;              // midpoint of simulated timestep, relative to day 1 of the year in which the simulation started
 extern int AnaerobicCO2;          // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2

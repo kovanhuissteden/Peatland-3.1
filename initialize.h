@@ -146,6 +146,11 @@ extern ofstream *output15;
 extern ofstream *output16;
 extern ofstream *output17;
 extern double DayNr;                      // midpoint of simulated timestep
+extern int YEARdays;                          // Length of one year in days
+extern int YearCounter;                       // current simulation year
+extern int CalendarYear;
+extern int Month;                       // Current month of simulation
+
 extern int Verbose;                       // output flag for run information to console
 extern double DayOfTheYear;               // Julian day number of the midpoint of the simulated time step relative to the current year;
 extern double Year;                       // current simulation year
@@ -153,10 +158,12 @@ extern double Timer;                      // starting point of simulated time st
 extern Matrix CorrFac;                    // environmental correction factors for aerobic SOM decomposition constants k
 extern Matrix MatricPotential;            // matric potential of model soil layer
 extern Matrix CO2;                        // CO2 evolved from each layer and reservoir
+
 extern double MethaneMaxConc;               // maximum methane concentratio
 extern Matrix MethaneFlux;                // Methane flux at surface;  1st value: ebullition flux; 2nd: plant mediated flux; 3d:diffusive flux
 extern Matrix MethaneReservoirs;          // This parameter tells which reservoirs are summed for calculating methane production from easily decomposed
 extern double MethaneReservoirSum;
+
 extern Matrix FreezingCurve;              // Unfrozen water content curve at below zero temperatures
 extern Matrix pFCurves;                   // final pF Curves after conversion from van genuchten parameters
 extern Matrix pFVal;                      // suction potentials for pF curves
@@ -166,15 +173,18 @@ extern Matrix Ice;                        // Ice content (kg ice / kg dry soil)
 extern Matrix MoistTheta;                 // soil moisture profile for timestep
 extern double CurrentGW;                  // Current water table during time step
 extern double WatertableInit;			// Initial water table in m, has to be specified if the watertable is calculated by the model
-extern double StartYear;                 // starting year
+
+extern int StartYear;                 // starting year
 extern char RunOnFile[];                 // file name for runon data
 extern Matrix RunOn;                     // Matrix with Run-on water quantity
 extern int AnaerobicCO2;                   // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 extern Matrix LayerAnaerobic;             // Anaerobic CO2 per layer
 extern Matrix AnaerobSum;          // sum of anaerobic CO2 per layer
+
 extern double MethaneVmax;              // Vmax Michaelis-Menten eq methane oxidation micrMol/hr range 5-50
 extern double MethaneKm;                // Km Michaelis-Menten eq methane oxidation micrMol range 1-5
 extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
+
 /************************ FUNCTION HEADERS ************************************/
 
 

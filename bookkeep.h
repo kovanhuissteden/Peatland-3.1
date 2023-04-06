@@ -22,7 +22,20 @@ extern double Timestep;                        // model timestep
 extern int Verbose;                            // output flag for run information to console
 extern double DayOfTheYear;                    // Julian day number of the midpoint of the simulated time step relative to the current year;
 extern double Year;                            // current simulation year
+extern int Month;
+extern int YearCounter;                       // current simulation year
+extern int CalendarYear;
+extern int monthdays;                       // Number of days in the current month.
+
+extern int Harvest_LOC;
+extern int HYY;
+extern int HMM;
+extern int HYY;
+extern int HdayNr;
+extern double Harv_height;
+extern int Harvest_LOC_END;
 
 
 void TrackTime();                              // Time system, updated at end of each model time step
 
+void checkHarvestDate();

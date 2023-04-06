@@ -48,6 +48,14 @@
 
  ***************************************************************************/
 
+#include <sys/stat.h> 
+#include <sys/types.h> 
+#include <string>
+#include <vector>
+#include <sstream>
+using namespace std;
+
+
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -60,6 +68,23 @@ using namespace std;
 #include "matrix.h"
 #include "general.h"
 #include "readparams.h"
+
+/*
+std::string split implementation using delimeter as a character.
+*/
+vector<string> split(string strToSplit, char delimeter)
+{
+    stringstream ss(strToSplit);
+    string item;
+    vector<string> splittedStrings;
+
+    while (getline(ss, item, delimeter))
+        {
+        splittedStrings.push_back( item );
+        }
+
+  return splittedStrings;
+}
 
 
 void cmdline(int argc, char *argv[])
@@ -162,7 +187,9 @@ int readstring(char x[], const char *ident, const char *filename, const int verb
     }
     file.close();
   }
-  if (!found & verbose) cout << "Variable " << ident << " not found in file " << filename << endl;
+
+  //if (!found) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
+  if ((!found) & (strcmp(filename, DEFAULTS) == 1)) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
   return found;
 }
 
@@ -210,7 +237,9 @@ int readscalar(double *x, const char *ident, const char *filename, const int ver
     }
     file.close();
   }
-  if (!found & verbose) cout << "Variable " << ident << " not found in file " << filename << endl;
+
+  // if ((!found) & verbose) cout << "Variable " << ident << " not found in file " << filename << endl;
+  if ((!found) & (strcmp(filename, DEFAULTS) == 1)) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
   return found;
 }
 
@@ -275,7 +304,8 @@ int readarray(double *x, int *len, const char *ident, const char *filename,  con
     }
     file.close();
   }
-  if (!found & verbose) cout << "Variable " << ident << " not found in file " << filename << endl;
+  //if ((!found) & verbose) cout << "Variable " << ident << " not found in file " << filename << endl;
+  if ((!found) & (strcmp(filename, DEFAULTS) == 1)) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
   return found;
 }
 
@@ -376,16 +406,78 @@ int readmatrix(double *x, int *r, int *c, const char *ident, const char *filenam
     }
     file.close();
   }
-  if (!found & verbose) cout << "FATAL ERROR: Variable " << ident << " not found in file " << filename << endl;
+  if ((!found) & (strcmp(filename, DEFAULTS) == 1)) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
+
   return found;
 }
+
+
+int readHarvest(char *harvestIN)
+{
+
+    int row = 0;
+    int count = 0, lines = 0, checkval = 1, r = 0, c = 0;
+    string line;
+    double *buf;
+
+    ifstream file(harvestIN);
+    buf = new double[1000];              
+    // maximum number of lines in harvest file
+    if (buf == NULL)
+    {
+      cout << ERRORMSG6 << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    /*if(file.is_open()){
+        while(!file.eof())
+        {
+            getline(file, line);
+            lines++;
+        }
+    file.close();}
+*/
+    r = lines; //number of harvest dates (number of lines)
+    c = 4; // YY, MM, DD, height 
+
+    count = readmatrix(buf, &r, &c, "HarvestData", harvestIN, TRUE);
+    HarvestData.Resize(r, c, buf);
+    Harvest_LOC = 0;
+    Harvest_LOC_END = r; //number of harvest dates (number of lines)
+    if (c != 4) // c must be equal to 4: YY, MM, DD, height
+    {
+        cout << ERRORMSG13 << endl;
+        exit(EXIT_FAILURE);
+    }
+    checkHarvestDate();
+
+    if ((HYY < StartYear) && (HMM < StartMonth) && (HDD < StartDay)){
+        cout << ERRORMSG14 << endl; // First harvest before start date
+        cout << "HYY " << HYY << endl;
+        cout << "HMM " << HMM << endl;
+        cout << "HDD " << HDD << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    if (count < checkval) {
+        cout << "count is less than checkval." << endl;
+        cout << "count: " << count << endl;
+        cout << "checkval: " << checkval << endl;
+    }
+
+    if (count < checkval) return FALSE; else return TRUE;
+
+}
+
 
 int readall()                     // read all parameters
 /* THIS FUNCTION HAS TO BE ADAPTED IF NEW PARAMETERS ARE ADDED TO THE MODEL */
 {
   double x;
   double *buf;
-  int count = 0, found = FALSE, len, r, c, maxpar = 112;
+  int count = 0, found = FALSE, len, r, c, maxpar = 118;
+
+
 
   buf = new double[10000];
   if (buf == NULL)
@@ -459,8 +551,12 @@ int readall()                     // read all parameters
       found = readscalar(&LAICarbonFraction, "LAICarbonFraction", ParamFile, FALSE);
       if (!found) found = readscalar(&LAICarbonFraction, "LAICarbonFraction", DEFAULTS, TRUE);
       count += found;
+      found = readscalar(&x, "PARunits", ParamFile, FALSE);
+      if (!found) found = readscalar(&x, "PARunits", DEFAULTS, TRUE);
+      count += found;
+      PARunits = (int)x;
   }
-  if (ProductionModel > 4)
+  if (ProductionModel == 4)
   {
       maxpar += 1;
       len = 4;
@@ -468,6 +564,9 @@ int readall()                     // read all parameters
       if (!found) found = readarray(PhotoPar.Data(), &len, "PhotoPar", DEFAULTS, TRUE);
       count += found;
   }
+  found = readscalar(&GreenBiomassRatio, "GreenBiomassRatio", ParamFile, FALSE);
+  if (!found) found = readscalar(&GreenBiomassRatio, "GreenBiomassRatio", DEFAULTS, TRUE);
+  count += found;
   found = readscalar(&Timestep, "Timestep", ParamFile, FALSE);
   if (!found) found = readscalar(&Timestep, "Timestep", DEFAULTS, TRUE);
   count += found;
@@ -478,22 +577,38 @@ int readall()                     // read all parameters
   if (!found) found = readscalar(&x, "StartYear", DEFAULTS, TRUE);
   StartYear = x;
   count += found;
+
   found = readscalar(&x, "StartDay", ParamFile, FALSE);
   if (!found) found = readscalar(&x, "StartDay", DEFAULTS, TRUE);
   StartDay = (int)x;
   count += found;
+
   found = readscalar(&DissimAssimRatio, "DissimAssimRatio", ParamFile, FALSE);
   if (!found) found = readscalar(&DissimAssimRatio, "DissimAssimRatio", DEFAULTS, TRUE);
   count += found;
     found = readscalar(&AnaerobicDARatio, "AnaerobicDARatio", ParamFile, FALSE);
   if (!found) found = readscalar(&AnaerobicDARatio, "AnaerobicDARatio", DEFAULTS, TRUE);
+
+  found = readstring(StartDate, "StartDate", ParamFile, FALSE);
+  if (!found) found = readstring(StartDate, "StartDate", DEFAULTS, TRUE);
   count += found;
+
+  found = readstring(EndDate, "EndDate", ParamFile, FALSE);
+  if (!found) found = readstring(EndDate, "EndDate", DEFAULTS, TRUE);
+  count += found; 
+
+  if ( (Timestep == 1.0) && (Assign_Start(StartDate)) && (Assign_end(EndDate))) 
+  {
+    NrOfSteps = count_days(StartDay, StartMonth, StartYear, EndDay, EndMonth, EndYear);
+  }
+
+  if (!NrOfSteps) cout << "Simulation duration could not be calculated. Default assumed." << endl;
+  if (Verbose) cout << "Total number of model timesteps (days): " << NrOfSteps << endl;
+
   found = readscalar(&ResistFrac, "ResistFrac", ParamFile, FALSE);
   if (!found) found = readscalar(&ResistFrac, "ResistFrac", DEFAULTS, TRUE);
   count += found;
-  //found = readscalar(&MolAct, "MolAct", ParamFile, FALSE);
-  //if (!found) found = readscalar(&MolAct, "MolAct", DEFAULTS, TRUE);
-  //count += found;
+
   found = readscalar(&KLitter, "KLitter", ParamFile, FALSE);
   if (!found) found = readscalar(&KLitter, "KLitter", DEFAULTS, TRUE);
   count += found;
@@ -519,6 +634,7 @@ int readall()                     // read all parameters
   found = readarray(Kdecay.Data(), &len, "Kdecay", ParamFile, FALSE);
   if (!found) found = readarray(Kdecay.Data(), &len, "Kdecay", DEFAULTS, TRUE);
   count += found;
+
   len = 7;
   found = readarray(AerobicQ10.Data(), &len, "AerobicQ10", ParamFile, FALSE);
   if (!found) found = readarray(AerobicQ10.Data(), &len, "AerobicQ10", DEFAULTS, TRUE);
@@ -527,6 +643,7 @@ int readall()                     // read all parameters
 /*  found = readarray(KPeatCN.Data(), &len, "KPeatCN", ParamFile, FALSE);
   if (!found) found = readarray(KPeatCN.Data(), &len, "KPeatCN", DEFAULTS, TRUE);
   count += found; */
+
   found = readscalar(&ShootsFactor, "ShootsFactor", ParamFile, FALSE);
   if (!found) found = readscalar(&ShootsFactor, "ShootsFactor", DEFAULTS, TRUE);
   count += found;
@@ -578,11 +695,21 @@ int readall()                     // read all parameters
   found = readscalar(&BioMassSenescence, "BioMassSenescence", ParamFile, FALSE);
   if (!found) found = readscalar(&BioMassSenescence, "BioMassSenescence", DEFAULTS, TRUE);
   count += found;
+  len = 2;
+  found = readarray(HarvestCorrection.Data(), &len, "HarvestCorrection", ParamFile, FALSE);
+  if (!found) found = readarray(HarvestCorrection.Data(), &len, "HarvestCorrection", DEFAULTS, TRUE);
+  count += found;
   r = 0;
   c = 2;
   found = readmatrix(buf, &r, &c, "Harvest", ParamFile, FALSE);
   if (!found) found = readmatrix(buf, &r, &c, "Harvest", DEFAULTS, TRUE);
   Harvest.Resize(r, c, buf);
+  count += found;
+  found = readstring(HarvestFile, "HarvestFile", ParamFile, FALSE);
+  if (!found) found = readstring(HarvestFile, "HarvestFile", DEFAULTS, TRUE);
+  count += found;
+  found = readscalar(&HarvestLitter, "HarvestLitter", ParamFile, FALSE);
+  if (!found) found = readscalar(&HarvestLitter, "HarvestLitter", DEFAULTS, TRUE);
   count += found;
   r = 0;
   c = 4;
@@ -612,6 +739,7 @@ int readall()                     // read all parameters
   found = readscalar(&MethaneR0, "MethaneR0", ParamFile, FALSE);
   if (!found) found = readscalar(&MethaneR0, "MethaneR0", DEFAULTS, TRUE);
   count += found;
+
   found = readscalar(&MethanepHCorr, "MethanepHCorr", ParamFile, FALSE);
   if (!found) found = readscalar(&MethanepHCorr, "MethanepHCorr", DEFAULTS, TRUE);
   count += found;
@@ -648,9 +776,11 @@ int readall()                     // read all parameters
   found = readscalar(&MethanePlantOx, "MethanePlantOx", ParamFile, FALSE);
   if (!found) found = readscalar(&MethanePlantOx, "MethanePlantOx", DEFAULTS, TRUE);
   count += found;
+
   found = readscalar(&CO2CH4ratio, "CO2CH4ratio", ParamFile, FALSE);
   if (!found) found = readscalar(&CO2CH4ratio, "CO2CH4ratio", DEFAULTS, TRUE);
   count += found;
+
   found = readscalar(&PartialAnaerobe, "PartialAnaerobe", ParamFile, FALSE);
   if (!found) found = readscalar(&PartialAnaerobe, "PartialAnaerobe", DEFAULTS, TRUE);
   count += found;
@@ -783,11 +913,13 @@ int readall()                     // read all parameters
   ProfileOutput.Resize(len, buf);
   count += found;
   delete buf;
-  if (count == maxpar) return TRUE; else
-  {
+  if (count >= maxpar) {
+      if (Verbose) cout << "Number of parameters read: " << count << "; required " << maxpar << endl << endl;
+      return TRUE;
+    } else {
 	if (Verbose)
 	{ 
-		cout << "Number of parameters read: " << count << "; should be " << maxpar << "!" << endl;
+		cout << "Number of parameters read: " << count << "; should be at least " << maxpar << "!" << endl;
 	}
 	return FALSE;
   }
@@ -920,6 +1052,22 @@ int readsoil(char *soilname)          // reads soil profile from the file specif
 	  if (Verbose) cout << "Taking water table data from file: " << GwFile << " Water table time series" << "\n";
     }
   }
+
+  if (strlen(HarvestFile) != 0)                                 // read harvest time series
+  {
+      if (!readHarvest(HarvestFile)){
+          cout << ERRORMSG9 << HarvestFile << endl;
+          count--;
+      } else
+      {
+      HarvestModel = 2;
+      if (Verbose) cout << "Taking harvest data from file: " << HarvestFile << "\n" << endl;
+      }
+      
+  }
+
+  
+
   if (strlen(PrecipFile) != 0)                                    // read precipitation time series, this also initilizes the water table module
   {
     Precipitation.Resize(NrOfSteps);
@@ -1067,8 +1215,10 @@ int readTseries(double *d, const char *filename, const int maxrows, const int co
   return count;
 }
 
+
 void WriteOutput()
 /* writes methane fluxes, CO2 fluxes and plant production/respiration and carbon balance to output files */
+
 {
   char buf[1024];
   ofstream *output;
@@ -1125,6 +1275,7 @@ void WriteOutput()
     LayerAnaerobic.Write(output);
     output->close();
   }
+
   strcpy(buf, &DataDir[0]);
   strcat(buf, &OutputFilePrefix[0]);
   output = new ofstream(strcat(buf, OUTPUT_BALANCE));
@@ -1147,3 +1298,213 @@ void WriteOutput()
   PeatDecay.Write(output);
   output->close();
 }
+
+
+
+int assignYEARdays(int year)
+{
+  
+  if (isALeapYear(year)) return  366;
+
+  else return YEARdays = 365;
+
+}
+
+
+int daysinmonth(int month, int year)
+{
+  switch (month)
+  {
+
+  case 1: case 3: case 5: case 7: case 8: case 10: case 12: return 31;
+
+  case 4: case 6: case 9: case 11: return 30;
+
+  case 2: if (isALeapYear(year))
+        return 29;
+      else
+        return 28;
+
+  
+  default: cout << "That's not a valid month. " << month << endl;
+  }
+
+  return 0;
+}
+
+
+bool isALeapYear(int year)
+{
+  /* Check if the year is divisible by 4 or 
+  is divisible by 400 */
+  return ((year % 4 == 0 && year % 100 != 0) || ( year % 400 == 0));
+}
+
+
+void isFebruary(bool LeapYear, int daystring)
+{
+    if (((LeapYear) && (daystring > 29)) || ((!LeapYear) && (daystring > 28)))
+    {
+      cout <<  ERRORMSG12 << " " << daystring  << endl;
+      exit(EXIT_FAILURE);
+    }
+}
+
+
+vector<string> FindDate(string IncomingDate)
+{
+
+    int daystring, monthstring, yearlength, yearstring;
+    bool LeapYear;
+
+    string str = IncomingDate;
+    if ( str.empty() ){
+        cout <<  ERRORMSG12 << " " << str  << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    vector<string> splittedString = split(str, '/');
+    daystring = std::stoi(splittedString[0]);
+    monthstring = std::stoi(splittedString[1]);
+    yearstring = std::stoi(splittedString[2]);
+    yearlength = splittedString[2].length();
+
+    // Check days, months <12, year is 4 characters:
+    if ((daystring > daysinmonth(monthstring, yearstring)) || (monthstring > 12) || (yearlength != 4))
+    {
+        cout <<  ERRORMSG12 << " " << str  << endl;
+        exit(EXIT_FAILURE);
+    }
+    
+    // test for leap year:
+    LeapYear = isALeapYear(yearstring);
+    if (monthstring == 2) isFebruary(LeapYear, daystring);
+    
+    return splittedString;
+
+}
+
+bool Assign_Start(string StartDate)
+{
+      vector<string> splittedString = FindDate(StartDate);
+      StartDay = std::stoi( splittedString[0] );
+      StartMonth = std::stoi( splittedString[1] );
+      StartYear = std::stoi( splittedString[2] );
+
+    // for(int i = 0; i < splittedString.size() ; i++){
+    //     cout << i << " " << splittedString[i] << endl;
+    // }
+    if (Verbose)
+    {
+      cout << "StartYear: " << StartYear << endl;
+      cout << "StartMonth: " << StartMonth << endl;
+      cout << "StartDay: " << StartDay << endl;
+    }
+
+  // cout << "StartDay, StartMonth, StartYear: " << StartDay << " " << StartMonth << " " << StartYear << endl;  
+      return TRUE;
+}
+
+
+void Find_date(string StrDate)
+{
+
+      string str = StrDate;
+      vector<string> splittedString = FindDate(StrDate);
+      HDD = std::stoi( splittedString[0] );
+      HMM = std::stoi( splittedString[1] );
+      HYY = std::stoi( splittedString[2] );
+
+      if (Verbose)
+      {
+        cout << "Year: " << HDD << endl;
+        cout << "Month: " << HMM << endl;
+        cout << "Day: " << HYY << endl;
+      }
+
+}
+
+
+bool Assign_end(string EndDate)
+{
+      string str = EndDate;
+      vector<string> splittedString = FindDate(EndDate);
+      EndDay = std::stoi( splittedString[0] );
+      EndMonth = std::stoi( splittedString[1] );
+      EndYear = std::stoi( splittedString[2] );
+
+      if (Verbose)
+      {
+        cout << "EndYear: " << EndYear << endl;
+        cout << "EndMonth: " << EndMonth << endl;
+        cout << "EndDay: " << EndDay << endl;
+        
+        
+      }
+
+      return TRUE;
+}
+
+
+int count_days(int day_1, int month_1, int year_1, int day_2, int month_2, int year_2)
+{
+
+  int daysbetween(0);
+
+    if (year_1 == year_2 && month_1 == month_2) // Same year and month
+    {
+      daysbetween = (day_2 - day_1) + 1;
+    }
+
+    else if (year_1 == year_2) // Same year
+    {
+      daysbetween = daysinmonth(month_1, year_1) - day_1 + 1;
+      // daysbetween = daysinmonth(month_1, year_1) - day_1;
+      for (int i = month_1 + 1; i < month_2; ++i)
+      {
+        daysbetween += daysinmonth(i, year_1);
+      }
+      daysbetween += day_2;
+    }
+
+    else // Different month & different year
+    {
+      daysbetween = daysinmonth(month_1, year_1) - day_1 +1;
+      // daysbetween = daysinmonth(month_1, year_1) - day_1;
+      for (int i = month_1 + 1; i <= 12; i++)
+      {
+        daysbetween += daysinmonth(i, year_1);
+      }
+      for (int i = (year_1 + 1); i < year_2; i++)
+      {
+        daysbetween += assignYEARdays(i);
+      }
+      for (int i = 1; i < month_2; i++)
+      {
+        daysbetween += daysinmonth(i, year_2);
+      }
+      daysbetween += day_2;
+    }
+
+    return daysbetween;
+    
+}
+
+
+int count_years(int year_1, int year_2)
+{
+
+  if (year_2 < year_1) 
+    {
+      cout << "StartYear must be older than EndYear." << endl; 
+      exit(EXIT_FAILURE);
+    }
+
+  if (year_1 == year_2) return 1;
+
+  else return (year_2 - year_1 +1); 
+
+}
+
+
+
