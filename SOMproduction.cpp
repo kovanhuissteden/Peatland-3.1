@@ -125,17 +125,16 @@ void OrgProd()
     result(1) = Timer + 0.5 * Timestep;
     result.Write(output8);
   }
-  CarbonBalance(StepNr, 1) = PrimProd * CONVKGCTOMOLC;
-
-  // correction factor for poor aeration due to topsoil waterlogging
+  //if (LAIovershoot > 0.0) PrimProd = PrimProd - ShootsFactor * LAIovershoot;  // Correct primary production for overshoot of LAI
+  //cout << LAIovershoot << "  " << CurrentLAI << endl;
+  CarbonBalance(StepNr, 1) = (PrimProd + PlantRespiration) * CONVKGCTOMOLC;
   TotalPrimProd += PrimProd;
   Shoots = ShootsFactor * PrimProd;                              // shoots production
-  overshoot = Shoots * LAIovershoot; // correction for primary production overshooting max LAI
+  overshoot = Shoots * LAIovershoot; // correction for overshooting max LAI by allocating more carbon to beloe-ground biomass
   Shoots = Shoots - overshoot; // decrease allocation to shoots if overshoot occurred
   gw = GwData(StepNr);                                           // partition roots according to root distribution function
   if (NoRootsBelowGWT)                                           // no roots below groundwater table flag
-
-  { // this calculation is cumbersome; better make a temporary exponential root distribution?
+  {
     rd.Resize(NrLayers);
     for (i = 1; i <= NrLayers; i++)                              // find which part of the root distribution function is above the groundwater table
     {
@@ -170,44 +169,23 @@ void OrgProd()
   }
   if (ProfileOutput.Contains(4)) RootMass.Write(output4);         // log root mass to output file
   totalroots = RootMass.Sum();  // total root mass kg C
-  /* Plant respiration:
-   Respiration is linearly dependent on both primary production and total biomass, calculated in photoysnthesis models as kg CO2/m2
-   total biomass has to be multiplied by the time step since the unit of the conversion factor is day-1 
-   For production model 3 and 4, only the leaf respiration is calculated in the model, the root respiration
-   has to be added and PrimProd corrected for it 
-   For productionmodel 5 and 6, total plantrespiration is included in the model
-  f = Timestep * 3.6641;                                           // timestep and C - CO2 conversion factor
-  if (ProductionModel < 3) {
-      plantrespC = RespFac(1) * PrimProd / Timestep + RespFac(2) * (BioMass + totalroots);
-      PrimProd -= plantrespC;
-      if (PrimProd < 0.0) PrimProd = 0.0;
-      PlantRespiration = f * plantrespC;
-  }
-  // For production model 3 and 4, the plant respiration is only calculated at leaf level, the root respiration has to be added 
-  //if ((ProductionModel == 3) || (ProductionModel == 4)) {
-      rootresp = RespFac(2) * totalroots;
-      PrimProd -= rootresp;
-      if (PrimProd < 0.0) PrimProd = 0.0;
-      PlantRespiration = PlantRespiration + f * rootresp;
-  }*/
-  CarbonBalance(StepNr, 15) = PlantRespiration * CONVKGCO2TOMOLC;
 /* plant respiration for production model 3 and 4 is calculated as part of the photosynthesis module
  however, this is only the growth respiration, the maintenance respiration still should be included
  units coming from photosynthesis model:  kg CO2 m2 per timestep */
-  BioMass += Shoots;                                              // total above ground biomass kg C
-  BioMassRec(StepNr, 8) = 0.0;
+    BioMass += Shoots;               // total above ground biomass kg C
+    BioMassRec(StepNr, 8) = 0.0;
 // Biomass senescence and litter production
-  oldBiomass = BioMass;
-   minBiomass = minLAI * LAICarbonFraction;
-   if ((DayOfTheYear > Phenology(8)) || (DayOfTheYear < Phenology(7))) autumn = TRUE; else autumn = FALSE;
-  if (ProductionModel < 3) {  // Litter production by dying off of above-ground biomass
-      litter = BioMassSenescence * BioMass * Timestep; // a distinction between production models is maintained for keeping compatibility with earlier versions of the model
-      BioMass -= litter;
-      if (BioMass < 0.0) BioMass = 0.0;
-      CurrentLAI = BioMass / LAICarbonFraction;
-  } else { // fraction of biomass shedded in autumn is dependent on decrease of LAI per time step
-      if (HDcount > 21){ // normal biomass senescence only occurs more than 3 weeks after harvest
-          if (LeafSenescence) { // autumn biomass senescence by temperare-driven decrease/increase of LAI;
+    oldBiomass = BioMass;
+    minBiomass = minLAI * LAICarbonFraction;
+    if ((DayOfTheYear > Phenology(8)) || (DayOfTheYear < Phenology(7))) autumn = TRUE; else autumn = FALSE;
+    if (ProductionModel < 3) {  // Litter production by dying off of above-ground biomass
+        litter = BioMassSenescence * BioMass * Timestep; // a distinction between production models is maintained for keeping compatibility with earlier versions of the model
+        BioMass -= litter;
+        if (BioMass < 0.0) BioMass = 0.0;
+        CurrentLAI = BioMass / LAICarbonFraction;
+    } else { // fraction of biomass shedded in autumn is dependent on decrease of LAI per time step
+        if (HDcount > 21){ // normal biomass senescence only occurs more than 3 weeks after harvest
+          if (LeafSenescence) { // autumn biomass senescence by temperature-driven decrease/increase of LAI;
               f_senescence = (PreviousLAI - CurrentLAI) / PreviousLAI;
           } else { //  normal biomass senescence during the growing season
               f_senescence = BioMassSenescence * Timestep;
@@ -254,71 +232,9 @@ void OrgProd()
   CarbonBalance(StepNr, 2) = TotalManure * CONVKGCTOMOLC;
   BioMassRec(StepNr, 10) = CurrentLAI;
 }
-/* old harvest functions
-void DoHarvest(double minBiomass)
-// Harvest of biomass at selected dates 
-
-{
-  int i, l;
-  double harvested, potentialharvest, remaining, add2litter;
-
-// Harvest matrix: harvest dates (1st column) and fraction of biomass harvested (2nd column)
-
-  l = Harvest.Rows();
-  for (i = 1; i <= l; i++)     // if the current day of the year falls within the current time step, cut the grass
-  {
-    if ((Harvest(i, 1) >= (DayOfTheYear - 0.5 * Timestep)) && (Harvest(i, 1) < (DayOfTheYear + 0.5* Timestep))) {
-        if (Verbose) cout << "Harvest" << endl;
-        potentialharvest = BioMass - minBiomass; // Check if the harvest does not exceed the maximum possible harvest
-        remaining = BioMass * (1.0 - Harvest(i, 2)); 
-        if (remaining < minBiomass) harvested = potentialharvest; else harvested = BioMass * Harvest(i, 2);
-        //assign harvested amount, either the maximum possible amount or the prescribed amount
-        BioMass -= harvested;
-        add2litter = harvested * HarvestLitter; // a fraction of harvest is added to liiter layer
-        LitterLayer += add2litter; 
-        harvested = harvested - add2litter;
-        HarvestGrazing += harvested;
-        CurrentLAI *= (1.0 - Harvest(i, 2));
-        Harvested = TRUE;
-    } else Harvested = FALSE;
-  }
-}
 
 
-void DateHarvest(double minBiomass)
-{
-// Harvest 
-//HYY = year (e.g. 2010), HMM = month (e.g. 3), HDD = dayofyear (e.g. 201) 
-//Harv_height = fraction of biomass harvested
-
-    int i, l;
-    double remaining = 0.0; // percent biomass lost after mowing
-    double add2litter = 0.0; // percent biomass kept after mowing and added to litter
-
-    double CanopyHeight = 0.5;
-    double harvested = 0.0;
-    double harvestfraction, potentialharvest;
-
-    harvestfraction = Harv_height; // e.g. 0.9
-    if ((HYY == CalendarYear) && (HdayNr >= (DayOfTheYear - 0.5 * Timestep)) && (HdayNr < (DayOfTheYear + 0.5* Timestep)))
-    {
-        if (Verbose) cout << "Harvest" << endl;
-        potentialharvest = BioMass - minBiomass; // Check if the harvest does not exceed the maximum possible harvest
-        remaining = BioMass * (1.0 - harvestfraction); 
-        if (remaining < minBiomass) harvested = potentialharvest; else harvested = BioMass * harvestfraction;
-        //assign harvestd amount, either the maximum possible amount or the prescribed amount
-        BioMass -= harvested;
-        add2litter = harvested * HarvestLitter; // a fraction of harvest is added to liiter layer
-        LitterLayer += add2litter;
-        harvested = harvested - add2litter;
-        HarvestGrazing += harvested;
-        CurrentLAI *= (1.0 - harvestfraction); // recalculate LAI
-        checkHarvestDate(); 
-    }
-}
-*/
-
-//  Harvest according to Merit; combines DoHarvest and DateHarvest 
+//  Harvest function according to Merit; combines DoHarvest and DateHarvest
 void DoHarvest()
 // Harvest of biomass at selected dates
 
@@ -605,69 +521,7 @@ double PhotoSynthesis(double LAI, double I)
     return (Timestep * nd / 1000.0);  // convert from g C/m2/d to kg C m2 per timestep
 }
 
-/* Version Merit
-double LAICalc()
-// Calculates LAI (leaf area index) from photosynthesis 
-//this includes not only Photosynthesis models 5 and 6 but also other models 
-//so the Phenology parameter should also be defined for the other models
-{
-    double gdd = 0.0, LAI = 0.0, t, p, kgCadded, maxLAI, minLAI, PotLAIadded, maxGDD, seasonstart, autumnstart;
-    BOOLEAN autumn = FALSE; // indication of spring/summer or atumn season
-    
-    maxLAI = Phenology(4);
-    minLAI = (1.0 - Phenology(6)) * maxLAI;
-    if (StepNr == 1) {
-        LAI = minLAI;
-        CurrentLAI = LAI;
-        PreviousLAI = CurrentLAI;
-    }
-    if (Phenology(1) == 1.0) // summergreen phenology depending on heat sum
-    {
-        maxGDD = Phenology(3);
-        seasonstart = Phenology(7);
-        autumnstart = Phenology(8);
-        if (StepNr < seasonstart) LAI = minLAI; // the first 30 days in the first year of the simulation get the minimumLAI, for the next years it depends on the BiomassSenenescence and weather 
-        if ((StepNr < seasonstart) && (BioMass == 0)) LAI = 0;
-        if (DayOfTheYear != (seasonstart + 0.5 * Timestep))
-        {   
-            gdd = Timestep * (TData(StepNr) - Phenology(2));  // heat sum
-            if (DayOfTheYear == (autumnstart + 0.5 * Timestep)) GrowingDegreeDays = maxGDD;
-            if ((DayOfTheYear > autumnstart) || (DayOfTheYear < seasonstart)) autumn = TRUE; // autumn; in autumn GDD can decrease
-            // if heat sum positive then calculculate LAI
-            if (autumn) { // autumn
-                if (gdd < 0.0) {  
-                    LeafSenescence = TRUE; 
-                    GrowingDegreeDays += gdd; // in autumn GDD may decrease
-                    if (GrowingDegreeDays < 0.0) GrowingDegreeDays = 0.0;
-                } else LeafSenescence = FALSE;
-            } else if (gdd > 0.0) GrowingDegreeDays += gdd;
-            if (GrowingDegreeDays > Phenology(3)) PotentialLAI = maxLAI; else PotentialLAI = minLAI + (maxLAI - minLAI) * GrowingDegreeDays / Phenology(3);
-            // potential LAI can decrease in autumn, so does LAI
-*            kgCadded = PrimProd * ShootsFactor;
-*            PotLAIadded = kgCadded / LAICarbonFraction; // potential LAI increase by photosynthesis
-*            if ((CurrentLAI < PotentialLAI) || ((PotentialLAI - PreviousLAI) < PotLAIadded)) {   // Harvest or grazing has occurred, or LAI increase by primprod is higher than LAI increase based on gdd
-*                LAI = CurrentLAI + PotLAIadded;
-*                //if (LAI > PotentialLAI) LAI = PotentialLAI;
-            } else LAI = PotentialLAI;
-                //maxLAI = Phenology(4) * GrowingDegreeDays / Phenology(3);
-                //kgCadded = PrimProd * ShootsFactor; // primary production based LAI growth to account for possible harvest or grazing
-                //LAI = CurrentLAI + kgCadded / LAICarbonFraction;
-                //if (LAI > maxLAI) LAI = maxLAI;
-        } else {
-            LeafSenescence = FALSE;
-            GrowingDegreeDays = 0.0;
-            PotentialLAI = minLAI;
-            CurrentLAI = PotentialLAI;
-            LAI = minLAI;
-            if (BioMass == 0) LAI = 0;
-        }
-    } else LAI = Phenology(4); // evergreen phenology with constant LAI AND NO HARVEST
-    PreviousLAI = CurrentLAI;
-    CurrentLAI = LAI;
-//    cout << DayOfTheYear << " LAI: "<< LAI << endl;
-    return LAI; 
-}
-*/
+
 double LAICalc()
 /* Calculates LAI (leaf area index) from photosynthesis 
  this includes not only Photosynthesis models 5 and 6 but also other models 
@@ -691,7 +545,7 @@ double LAICalc()
         autumnstart = Phenology(8);
         if (StepNr < seasonstart) LAI = minLAI; // the first 30 days in the first year of the simulation get the minimumLAI, for the next years it depends on the BiomassSenenescence and weather
         if ((StepNr < seasonstart) && (BioMass == 0)) LAI = 0;
-        if (DayOfTheYear != (seasonstart + 0.5 * Timestep))
+        if (DayOfTheYear != (seasonstart + 0.5 * Timestep)) //!!!!!moet dit niet > zijn ipv !=
         {   
             gdd = Timestep * (TData(StepNr) - Phenology(2));  // heat sum
             if (DayOfTheYear == (autumnstart + 0.5 * Timestep)) GrowingDegreeDays = maxGDD;
@@ -703,35 +557,31 @@ double LAICalc()
                     GrowingDegreeDays += gdd; // in autumn GDD may decrease
                     if (GrowingDegreeDays < 0.0) GrowingDegreeDays = 0.0; // zero minimum of GDD
                 } else LeafSenescence = FALSE; // positive daily heat sum: warm weather, further senescence delayed
-            } else if (gdd > 0.0) GrowingDegreeDays += gdd;
+            } else {
+                if (gdd > 0.0) {
+                    GrowingDegreeDays += gdd;
+                    LeafSenescence = FALSE;
+                }
+            }
             if (GrowingDegreeDays > maxGDD) PotentialLAI = maxLAI; else PotentialLAI = minLAI + (maxLAI - minLAI) * GrowingDegreeDays / Phenology(3);
             // potential LAI can decrease in autumn, so does LAI
             kgCadded = PrimProd * ShootsFactor;
+            // adapte by using the GreenBiomassRatio, the ratio over photosynthesizing biomass over total bomass
             PotLAIadded = GreenBiomassRatio * kgCadded / LAICarbonFraction; //LAI added according to primary production and GreenBiomassRatio
-            
-            // Hier gaat het fout, dit mag niet leiden tot een LAI groter dan maxLAI
-            // maar zonodig moet PrimProd dan ook gecorrigeerd????
-            //  ((PotentialLAI - PreviousLAI) < PotLAIadded)) veranderd in ((PotentialLAI - PreviousLAI) > PotLAIadded))
-            // nog beter is de LAI te begrenzen op maxLAI; dat houdt hardere groei dan GDD toelaat mogelijk
-            // LAI en BioMass kloppen hoe dan ook nog niet, geen effect van oogst?
-            // Inderdaad: Harvest model 2 werkt niet (Harvest data uit file)
-            // NOG TOEVOEGEN bij verdeling root-shoots: bij PotLAIAdded > PotentialLAI volgens gdd meer C naar belowground?
-            
-            //if ((CurrentLAI < PotentialLAI) || ((PotentialLAI - PreviousLAI) > PotLAIadded)) {
+// Bug correction: previous coude allowed to exceed the maximum LAI strongly, which causes errors in the methane model.
+// This has been corrected by introducing the LAIovershoot variable.
+// If a LAI overshoot occurs, the carbon allaocation from primary production to shoot production is decreased, in favour
+// of root production, if function OrgProd.
+
             if (CurrentLAI < PotentialLAI) {
                 // Harvest or grazing has occurred, or LAI increase by primprod is higher than LAI increase based on gdd
                 LAI = CurrentLAI + PotLAIadded;
                 if (LAI > maxLAI) { // Restrict LAI to maximum LAI
-                    LAIovershoot = (LAI - maxLAI) / PotLAIadded;
-                    //cout << "LAIovershoot: " << LAIovershoot<< endl;
-                    // LAI > maximum LAI should result in lower aboveve-ground biomass allocation in favour of below-ground
+                    LAIovershoot = (LAI - maxLAI) / maxLAI;
+                    // LAI > maximum LAI should result in lower above-ground biomass allocation in favour of below-ground
                     LAI = maxLAI;
                 }
             } else LAI = PotentialLAI;
-                //maxLAI = Phenology(4) * GrowingDegreeDays / Phenology(3);
-                //kgCadded = PrimProd * ShootsFactor; // primary production based LAI growth to account for possible harvest or grazing
-                //LAI = CurrentLAI + kgCadded / LAICarbonFraction;
-                //if (LAI > maxLAI) LAI = maxLAI;
         } else {
             LeafSenescence = FALSE;
             GrowingDegreeDays = 0.0;

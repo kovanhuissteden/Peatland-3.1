@@ -288,7 +288,7 @@ void CollectCO2()
   OldLitter = LitterLayer;
   PeatDecay(StepNr, 1) = storagechange.SumCol(1);
   PeatDecay(StepNr, 2) = PeatLoss;
-  for (i = 10; i <= 14; i++) CarbonBalance(StepNr, 23) += CarbonBalance(StepNr, i);  // sum of all carbon emission
+  for (i = 10; i <= 15; i++) CarbonBalance(StepNr, 23) += CarbonBalance(StepNr, i);  // sum of all carbon emission
   CarbonBalance(StepNr, 23) += CarbonBalance(StepNr, 19); //Carbon loss by harvest and grazing
   CarbonBalance(StepNr, 24) += CarbonBalance(StepNr, 1) + CarbonBalance(StepNr, 2);  // sum of incoming carbon
   for (i = 3; i <= 9; i++) CarbonBalance(StepNr, 25) += CarbonBalance(StepNr, i);  // sum of all carbon storage changes
