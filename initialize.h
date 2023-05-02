@@ -31,7 +31,7 @@
 #define OUTPUT11    "peat.dat"
 #define OUTPUT12    "liquid_manure.dat"
 #define OUTPUT13    "solid_manure.dat"
-#define OUTPUT14    "rhizodep.dat"
+#define OUTPUT14    "exudates.dat"
 #define OUTPUT15    "litter_roots.dat"
 #define OUTPUT16    "microbes.dat"
 #define OUTPUT17    "humus.dat"
