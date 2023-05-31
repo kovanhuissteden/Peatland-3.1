@@ -551,10 +551,10 @@ int readall()                     // read all parameters
       found = readscalar(&LAICarbonFraction, "LAICarbonFraction", ParamFile, FALSE);
       if (!found) found = readscalar(&LAICarbonFraction, "LAICarbonFraction", DEFAULTS, TRUE);
       count += found;
-      found = readscalar(&x, "PARunits", ParamFile, FALSE);
-      if (!found) found = readscalar(&x, "PARunits", DEFAULTS, TRUE);
+      found = readscalar(&x, "RADunits", ParamFile, FALSE);
+      if (!found) found = readscalar(&x, "RADunits", DEFAULTS, TRUE);
       count += found;
-      PARunits = (int)x;
+      RADunits = (int)x;
   }
   if (ProductionModel == 4)
   {
@@ -875,8 +875,8 @@ int readall()                     // read all parameters
   }
   if (ProductionModel > 2)
   {  
-      found = readstring(PARFile, "PARFile", ParamFile, FALSE);
-      if (!found) found = readstring(PARFile, "PARFile", DEFAULTS, TRUE);
+      found = readstring(RADFile, "RADFile", ParamFile, FALSE);
+      if (!found) found = readstring(RADFile, "RADFile", DEFAULTS, TRUE);
       count += found;
   }
   found = readstring(CO2File, "CO2File", ParamFile, FALSE);
@@ -1017,13 +1017,13 @@ int readsoil(char *soilname)          // reads soil profile from the file specif
   if (ProductionModel > 2)         // read PAR data time series
   {
         PARData.Resize(NrOfSteps);
-        if (readTseries(PARData.Data(), PARFile, NrOfSteps, 1) < NrOfSteps)
+        if (readTseries(PARData.Data(), RADFile, NrOfSteps, 1) < NrOfSteps)
         {
-            cout << ERRORMSG9 << PARFile << endl;
+            cout << ERRORMSG9 << RADFile << endl;
             count--;
         } else
         {
-            if (Verbose) cout << "Taking PAR data from file: " << PARFile  << " PAR time series" <<"\n";
+            if (Verbose) cout << "Taking PAR data from file: " << RADFile  << " PAR time series" <<"\n";
         }
   }
   if ((ThermModel == 2) && (strlen(TFile) != 0))            // read temperature time series in case when temperature is specified for each layer

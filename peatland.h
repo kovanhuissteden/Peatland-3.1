@@ -186,9 +186,9 @@ Matrix ManureLayers;                    // partitioning of manure among layers; 
 Matrix RootDistrib;                     // root distribution function
 char NPPFile[256] = "";                 // file with primary production data for each time step; these data override any selected production model
 Matrix NPPData;                         // net primary production data from file NPPfile or model
-char PARFile[256] = "";               // file with PAR (photosynthetic active radiation, (J cm-2) or cloud cover data (cloud fraction, 0-1) for NPP model
+char RADFile[256] = "";               // file with PAR (photosynthetic active radiation, (J cm-2) or cloud cover data (cloud fraction, 0-1) for NPP model
 Matrix PARData;                         // photosynthetic active radiation or cloud cover data
-int PARunits; // units in which PARData is given, 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
+int RADunits; // units in which PARData is given, 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
 BOOLEAN LeafSenescence = FALSE;           // indicates whether leaf senescence may occur for photosynthesis model
 double AmbientCO2 = 385;                // Ambient CO2 concentration
 char CO2File[256] = "";                 // file with yearly averaged CO2 concentration for multi-year runs

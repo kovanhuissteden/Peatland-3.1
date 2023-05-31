@@ -103,7 +103,7 @@ extern char HarvestFile[];
 extern Matrix HarvestData;
 extern int Harvest_LOC_END;
 extern int HarvestModel;
-extern int PARunits; // units in which PARData is given, 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
+extern int RADunits; // units in which PARData is given, 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
 
 extern char StartDate[];                // Start date DD/MM/YYYY
 extern char EndDate[];                  // End date DD/MM/YYYY
@@ -252,7 +252,7 @@ extern double CropFactor;			    // Makkink Crop factor to correct evaporation fo
 extern Matrix SandFraction;			    // sand weight fraction of mineral fraction
 extern Matrix ClayFraction;					// clay weight fraction of mineral fraction, influences decomposition rate humus reservoir
 extern double VegTScalingFactor;			// scaling factor for air to soil surface temperature; put to one if soil surface temperature is input; outherwise a valye between 0.6 and 1.0
-extern char PARFile[];                  // file with PAR (W m-2) or cloud cover data for NPP model
+extern char RADFile[];                  // file with PAR (W m-2) or cloud cover data for NPP model
 extern double Latitude;                    // site latitude, to be used for photosynthesis model if only cloud cover data is supplied
 extern Matrix Phenology;                // Phenology data for production model 3 and 4
 extern double AmbientCO2;               // Ambient CO2 concentration

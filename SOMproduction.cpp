@@ -376,13 +376,13 @@ double PARcalc()
     // shortwave radiation as measured by the commonly used pyraonmeter is the wavelength range 300nm to 3000nm = UV+Visible+Near Infrared (Kipp website)
     //Dye (2004) conversie factor: 4.56 umol/joule, here 4.6035
 
-    if (PARunits == 0) // input file is PAR radiation in umol m-2 s-1
+    if (RADunits == 0) // input file is PAR radiation in umol m-2 s-1
     {
         par = PARData(StepNr); // no conversion for ProductionModel 4
         if (ProductionModel == 3) {     // convert par from umol m-2 s-1 to J m-2 day-1
             par = par / (parfrac * RE2PHOTONS) * (3600 * twentyfour);}
     // ervan uitgaande dat de PAR het totaal is over de daglengte
-    } else if (PARunits == 1) // input file is total daily radiation in J cm-2 day-1
+    } else if (RADunits == 1) // input file is total daily radiation in J cm-2 day-1
     {
         //  convert total daily radiation in J cm-2 day-1 to PAR J m-2 day-1
         par = PARData(StepNr) * 1.0e4 * parfrac;   // no further conversion forProductionModel 3
@@ -393,7 +393,7 @@ double PARcalc()
         // Divide by seconds of daylight hr-1 (3600)
         // multiplication factor (4.6035) is derived from https://www.berthold.com/en/bio/how-do-i-convert-irradiance-photon-flux
         // assumes that 66% is radiation between 470 and 520 nm
-    } else if (PARunits == 2) // input is cloud cover
+    } else if (RADunits == 2) // input is cloud cover
     {
         cloudcover = PARData(StepNr);
         zz = u * h * 2 * PI / 24.0 + 2 * v * sin(h * PI /24.0); // correct integral 

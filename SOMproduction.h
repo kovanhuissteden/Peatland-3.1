@@ -70,7 +70,7 @@ extern char NPPFile[256];                    // file with primary production dat
 extern double GrowingDegreeDays;             // growing degree days for phenology and photosynthesis model
 extern Matrix TData;                           // Air or soil temperature data from file Tfile
 extern Matrix PARData;                         // photosynthetic active radiation or cloud cover data
-extern int PARunits; // units in which PARData is given, 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
+extern int RADunits; // units in which PARData is given, 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
 extern double Latitude;                      // Latitude of site in degrees (north positive)
 extern Matrix Phenology;                // Phenology data for production model 3 and 4
 extern ofstream *output8;                 // output stream npp for production model

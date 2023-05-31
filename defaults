@@ -101,11 +101,11 @@ ProductionModel = 2;                    % Production model:
                                         % 2 for production data read from file, variable NPPFile has to be defined (kgC/m2/day)
                                         % 3 for photosynthesis model cf Haxeltine and Prentice
                                         % 4 for photosynthesis model for tundra, Shaver et al, J. Ecology 2007 (not depending on CO2 concentration) 
-PARunits = 0;                           % units in which PARData is given for ProductionModel 3 and 4,
+RADunits = 0;                           % units in which PARData is given for ProductionModel 3 and 4,
                                         % 0: PAR radiation in umol m-2 s-1; 1:total daily radiation in J cm-2; 2: input is cloud cover
                                         % J cm-2 is the normal reporting unit for public weather station data 
 NPPFile = "";                           % external file for net primary productivity
-PARFile = "";                           % file with incoming solar radiation data (J cm-2) or cloud cover data for ProductionModel model 3 or 4
+RADFile = "";                           % file with incoming solar radiation data (J cm-2) or cloud cover data for ProductionModel model 3 or 4
 Latitude = 50.0;                        % site latitude for ProductionModel 4
 Phenology = [1 10.0 150 2.0 1 0.9 30 240];     % Phenology parameters production model 3 to 6; first number is type of phenology (0 for evergreen, 1 for summergreen)
                                         % second is the base for calculating the heat sum (growing degree days) third the heat sum when maximum leaf area index
