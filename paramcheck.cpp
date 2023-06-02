@@ -99,7 +99,7 @@ manure matrices                                                 */
     cout << "pF data" << PARAM_ERROR1 << endl;
     ok = FALSE;
   }
-  
+  Q10check();
 /* Directly applying the Van Genuchten curves makes the model slow, in particular when water table is calculated
 The solution of the water table takes repeated integration of the Van Genuchten equation which is computationally 
 intensive.
@@ -173,3 +173,25 @@ Because pF curves of peat soils tend to be steep with pF values > 1, the interva
 }
 
 
+void Q10check()
+/* checks if the Q10 values that have been specified for aerobic and anaerobic decomposition
+ * are in agreement with the chosen temperature correction equation, Q10 or Arrhenius (parameter Q10orArrhenus
+ * */
+{
+    const int check = 20;
+    int j;
+    BOOLEAN test = FALSE;
+
+    if (Q10orArrhenius == 0) {
+        for (j = 1; j <= NrReservoirs; j++) if (AerobicQ10(j) >= check) test = TRUE;
+        if (AnaerobicCO2 > 0.0) {
+            if (Q10Anaerobic >= check) test = TRUE;
+        }
+    } else {
+        for (j = 1; j <= NrReservoirs; j++) if (AerobicQ10(j) < check) test = TRUE;
+        if (AnaerobicCO2 > 0.0) {
+            if (Q10Anaerobic < check) test = TRUE;
+        }
+    }
+    if (test) cout << PARAM_WARNING1 << endl;
+}

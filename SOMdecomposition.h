@@ -43,6 +43,7 @@ extern double Timestep;           // model timestep
 extern double SpringFactor;       // instantaneous value of spring correction, declared global for use by environmental correction SOM decomposition for priming effect
 extern Matrix Kdecay;             // SOM decomposition constants for each reservoir
 extern Matrix AerobicQ10;                // Q10 for each reservoir
+extern int Q10orArrhenius;             //Switch between temperature correction of (an)aerobic decomposition as Q10 (0) or Arrhenius (1) equation
 extern double AnaerobicAssimDissim;      // Assimiltion/Dissimilation ratio anaeroob
 extern double CurrentGW;          // Current water table during time step
 extern double LayerThickness;     // Thickness of depth step

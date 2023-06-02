@@ -16,6 +16,8 @@
  ***************************************************************************/
 
 
+#pragma once
+
 #define PARAM_ERROR1 " does not match number of horizons."
 #define PARAM_ERROR2 "Check pF curves: water content at saturation higher than pore volume in horizon "
 #define PARAM_ERROR3 "Initial reservoir content in InitRes does not sum to 1 in horizon "
@@ -23,6 +25,7 @@
 #define PARAM_ERROR5 "Initial methane profile and number of layers do not match."
 #define PARAM_ERROR6 "Matrices Manure and ManureLayers should have 2 columns and ManureLayers no more layers than model."
 #define PARAM_ERROR7 "Columns of Matrix ManureLayers should sum to one. "
+#define PARAM_WARNING1 "WARNING: Q10 values not in agreement with chosen decomposition temperature correction equation in Q10orArrhenius."
 
 extern BOOLEAN Verbose;                  // output flag on-screen output
 extern double DensOrg;                   // density organic matter in peat (density of wood) kgm-3
@@ -44,7 +47,10 @@ extern Matrix Manure;                    // Manure application dates (column 1) 
 extern Matrix ManureLayers;              // partitioning of manure among layers; first column: fluids; second column: solids
 extern BOOLEAN ApplyVanGenuchten;		 // indicates application of Van Genuchten equation for soil moisture
 extern double StepsizepF;				 // pF step size for Van Genuchten function
-
+extern int Q10orArrhenius;             //Switch between temperature correction of (an)aerobic decomposition as Q10 (0) or Arrhenius (1) equation
+extern Matrix AerobicQ10;                // Q10 for each reservoir
+extern double Q10Anaerobic;       // Q10 anaerobic decomposition
+extern int AnaerobicCO2;          // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2
 /************************ FUNCTION HEADERS ************************************/
 
 void Porevol();
@@ -59,5 +65,8 @@ depth of soil profile vs. model layers
 length of initial methane profile
 manure matrices                                                 */
 
-
+void Q10check();
+/* checks if the Q10 values that have been specified for aerobic and anaerobic decomposition
+ * are in agreement with the chosen temperature correction equation, Q10 or Arrhenius (parameter Q10orArrhenus
+ * */
 

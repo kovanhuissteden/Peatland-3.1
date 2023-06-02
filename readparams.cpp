@@ -475,7 +475,7 @@ int readall()                     // read all parameters
 {
   double x;
   double *buf;
-  int count = 0, found = FALSE, len, r, c, maxpar = 118;
+  int count = 0, found = FALSE, len, r, c, maxpar = 119;
 
 
 
@@ -895,6 +895,10 @@ int readall()                     // read all parameters
   if (!found) found = readscalar(&x, "AnaerobicCO2", DEFAULTS, TRUE);
   count += found;
   AnaerobicCO2 = (int)x;
+  found = readscalar(&x, "Q10orArrhenius", ParamFile, FALSE);
+  if (!found) found = readscalar(&x, "Q10orArrhenius", DEFAULTS, TRUE);
+  count += found;
+  Q10orArrhenius = (int)x;
   found = readscalar(&Q10Anaerobic, "Q10Anaerobic", ParamFile, FALSE);
   if (!found) found = readscalar(&Q10Anaerobic, "Q10Anaerobic", DEFAULTS, TRUE);
   count += found;

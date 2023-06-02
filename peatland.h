@@ -14,7 +14,7 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-
+#pragma once
 #include <iostream>
 #include <fstream>
 using namespace std;
@@ -122,16 +122,16 @@ double HalfSatPoint = 0.1;              // half activity saturation point for co
 double RootAeration = 0;                // Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
 double PrimingCorrection = 0;           // Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
 Matrix Kdecay(7);                       // SOM decomposition constants for each reservoir
-Matrix AerobicQ10(7);                   // Q10 for each reservoir
+Matrix AerobicQ10(7);                   // Q10 or Arrhenius molecular activation rate for each reservoir
 //Matrix KPeatCN(2);                      // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
 Matrix SplitRes;                        // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
 //Matrix KPeat;                           // Horizon-C/N dpendent peat decomposition rate
-
+int Q10orArrhenius = 0;                 //Switch between temperature correction of (an)aerobic decomposition as Q10 (0) or Arrhenius (1) equation
 int AnaerobicCO2 = 0;                   // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 Matrix KAnaerobic(7);                   // Anaerobic decomposition constants, for all SOM reservoirs
 Matrix LayerAnaerobic;                  // Anaerobic CO2 per layer
 Matrix AnaerobSum;                      // sum of anaerobic CO2 per layer
-double Q10Anaerobic = 3.5;              // Q10 anaerobic decomposition
+double Q10Anaerobic = 3.5;              // Q10 or Arrhenius Molecular activation rate of anaerobic decomposition
 double KLitter = 0.5;                   // decomposition constant above-ground litter and standing dead biomass
 
 /***************************SOM production***********************************/

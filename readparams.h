@@ -39,6 +39,8 @@ readmatrix  - reads a matrix
 */
 
 
+#pragma once
+
 #define OUTPUT_METHANE    "methanefluxes.dat"
 #define OUTPUT_CO2RES     "CO2reservoirs.dat"
 #define OUTPUT_CO2LAY     "CO2layers.dat"
@@ -270,6 +272,7 @@ extern Matrix RunOn;                    // Matrix with Run-on water quantity
 extern double KBeer;                    // Beer's law constant for photosynthesis models, values around 0.5
 extern Matrix PhotoPar;                 // Parameters for photosynthesis model 5 for tundra, Shaver et al, J. Ecology 2007
 extern double LAICarbonFraction;         // relates leaf area index to kg C/m2 
+extern int Q10orArrhenius;             //Switch between temperature correction of (an)aerobic decomposition as Q10 (0) or Arrhenius (1) equation
 extern int AnaerobicCO2;                       // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2
 extern Matrix KAnaerobic;                      // Anaerobic decomposition constants
 extern double Q10Anaerobic;                    // Q10 anaerobic decomposition

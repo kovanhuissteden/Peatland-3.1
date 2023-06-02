@@ -55,15 +55,11 @@ Priming correction                                                         */
   {
     a = (int)Layers(i,4); // a is reference to soil horizon
     t = SoilTemp(i);
-    for (j = 1; j <= NrReservoirs; j++) tcorr(j) = pow(AerobicQ10(j), (t - T_ref) / 10.0); // temperature correction based on per reservoir specified Q10
-    // Old code based on Arrhenius equation     
-    /*if (t > 4)                                    // temperature correction cf Arrhenius equation downto 4 degrees
-    {
-      tcorr = exp((-MolAct / Rgas) * (1 / (t + 273.0) - 1 / (T_ref + 273.0)));
-    } else
-    {                                             // below +4 degrees straight decline to 0 and below 0 no decomposition
-      if (t > 0) tcorr = exp((-MolAct / Rgas) * (1 / (277.0) - 1 / (T_ref + 273.0))) * (t / 4); else tcorr = 0;
-    }*/
+    if (Q10orArrhenius == 0) {
+        for (j = 1; j <= NrReservoirs; j++) tcorr(j) = pow(AerobicQ10(j), (t - T_ref) / 10.0); // temperature correction based on per reservoir specified Q10
+    } else { //Arrhenius equation; Q10 is interpreted as molecular activation rate, specified per reservoir
+        for (j = 1; j <= NrReservoirs; j++) tcorr(j) = exp((-AerobicQ10(j) / Rgas) * (1 / (t + 273.0) - 1 / (T_ref + 273.0)));
+    }
     pHcorr = 1 / (1 + exp(-2.5 * (Layer_pH(a) - 5))); // pH correction cf ANIMO
     // the correction for soil dryness is linearly dependent on matric potential in a user defined range
     // defined in pF points. At the dry end of the range the factor is a fixed low valuse
@@ -149,9 +145,13 @@ void Decompose()
     // anaerobic CO2 for layers that are partly or entirely below water table
     if (unsatfraction < 1.0)  // layer partly or entirely below water table
     {
-        if (AnaerobicCO2 > 0.0) // calculations only included if AnaerobicCO2 parameter is > 0
+        if (AnaerobicCO2 > 0.0) // anaerobic calculations only included if AnaerobicCO2 parameter is > 0
         { 
-            anaertemperaturefact = pow(Q10Anaerobic, ((soilT - MethaneTRef) / 10.0)); // assuming that the reference temperature for Fe and S is the same as for methane
+            if (Q10orArrhenius == 0) { // temperature correction for anaerobic decomposition
+                anaertemperaturefact = pow(Q10Anaerobic, ((soilT - T_ref) / 10.0)); // assuming that the reference temperature for NO3, Fe/Mn and SO4 reduction is the same as for aerobic oxidation
+            } else { // temperature correction cf Arrhenius equation
+                anaertemperaturefact = exp((-Q10Anaerobic / Rgas) * (1 / (soilT + 273.0) - 1 / (T_ref + 273.0)));
+            }
             for (j = 1; j <= NrReservoirs; j++)
             {
                 ka = KAnaerobic(j) * anaertemperaturefact;
@@ -171,7 +171,6 @@ void Decompose()
             AnaerobSum(i) = anaerobCO2.SumRow(i); // sum over all reservoirs for layer total
         }
     } // end anaerobic CO2 calculation
-    
   }  
   litterTfact = pow(2.0, ((TData(StepNr) - T_ref) / 10.0)); // temperature sensitivity of litter decomposition is fixed at Q10 = 2.0
   ka = KLitter * litterTfact;
