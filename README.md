@@ -10,4 +10,4 @@ Version 3.1 is being developed to include a number of improvements:
 - Temperature sensitivity improvement for all soil carbon reservoirs
 - Carbon immobilization by binding to mineral particles
 
-WARNING: THIS CODE HAS NOT BEEN TESTED YET!!!!
+WARNING: THIS CODE HAS NOT BEEN TESTED FULLY
