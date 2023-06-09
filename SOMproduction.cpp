@@ -231,6 +231,7 @@ void OrgProd()
   BioMassRec(StepNr, 9) = TotalManure;
   CarbonBalance(StepNr, 2) = TotalManure * CONVKGCTOMOLC;
   BioMassRec(StepNr, 10) = CurrentLAI;
+  BioMassRec(StepNr, 11) = GPP;
 }
 
 
@@ -449,7 +450,7 @@ double PhotoSynthesis(double LAI, double I)
     double rd = 0.0;                // Daily leaf respiration, Rd, gC/m2/day 
     double nd = 0.0;                // Daily net photosynthesis (at leaf level), And, gC/m2/day
     double adt = 0.0;               // Total daytime net photosynthesis, Adt, gC/m2/day
-    double temp, h, pO2, pa, tstress, k1, k2, k3, low, high, s, c1, c2, ko, kc, fac, sigma, phipi;
+    double temp, h, pO2, pa, tstress, k1, k2, k3, low, high, s, c1, c2, ko, kc, fac, sigma, phipi, NPP;
     int ptype;
     
     b[0] = RespFac(1);  // The first value of respfac is the leaf respiration factor depending on C3 or C4 photosynthesis
@@ -517,8 +518,25 @@ double PhotoSynthesis(double LAI, double I)
     rd = b[ptype - 1] * vm; // Daily leaf respiration, Rd, gC/m2/day Eqn 10, Haxeltine & Prentice 1996
     nd = agd - rd;  // Daily net photosynthesis (at leaf level), And, gC/m2/day
     adt= nd + (1.0 - h / 24) * rd; // Total daytime net photosynthesis, Adt, gC/m2/day Eqn 19, Haxeltine & Prentice 1996
+
+    /* Merit
+    NPP = Timestep * adt / 1000.0;  IS DIT WEL GOED?? in mijn versie is dit nd ----- NB NPP is lokaal gedefinieerd
+    // convert from g C/m2/d to kg C m2/d
+
+    NPP is returned!
+
+    GPP = agd * Timestep / 1000;
+    // convert from g C/m2/day to kg C m-2 per timestep
+
+    */
+    NPP = Timestep * adt / 1000.0;
+    // convert from g C/m2/d to kg C m2/d
+    GPP = agd * Timestep / 1000;
+    // convert from g C/m2/day to kg C m-2 per timestep
+
     PlantRespiration = Timestep * C_CO2 * rd / 1000.0;  // convert from g C/m2/d to kg CO2 m2 per timestep
-    return (Timestep * nd / 1000.0);  // convert from g C/m2/d to kg C m2 per timestep
+    //return (Timestep * nd / 1000.0);  // convert from g C/m2/d to kg C m2 per timestep
+    return(NPP);
 }
 
 

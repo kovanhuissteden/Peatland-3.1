@@ -103,7 +103,7 @@ void OutputInit()                                     // initializes output arra
 /* storage matrix for CO2 per reservoir per timestep; extra entries ar added for day number, CO2 from litter, CO2 from Methane oxidation and the total*/
   LayerTime.Resize(NrOfSteps, NrLayers + 1);           // storage matrix for CO2 per layer per timestep
                                                       // NOTE: only Walters model is used here, in the Matlab version there was a choice of two models
-  BioMassRec.Resize(NrOfSteps, 10);                    // storage of biomass, 1: time (days); 2: total plant biomass including roots (kg C.m-2); 3: primary production; 4: // plant respiration; 5: net CO2 flux (soil respiration + plant repiration - primary production); 6: soil respiration + dark respiration of vegetation (mg.m-2.hr-1); 7: // litter mass (kg C.m-2); 8: biomass removed by harvest and grazing 9: LAI
+  BioMassRec.Resize(NrOfSteps, 11);                    // storage of biomass, 1: time (days); 2: total plant biomass including roots (kg C.m-2); 3: primary production; 4: // plant respiration; 5: net CO2 flux (soil respiration + plant repiration - primary production); 6: soil respiration + dark respiration of vegetation (mg.m-2.hr-1); 7: // litter mass (kg C.m-2); 8: biomass removed by harvest and grazing 9: LAI
 
   LayerAnaerobic.Resize(NrOfSteps, NrLayers);
   CarbonBalance.Resize(NrOfSteps, 26);
