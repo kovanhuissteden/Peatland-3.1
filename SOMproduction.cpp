@@ -58,6 +58,7 @@
 
 void OrgProd()
 /* Net Primary Production and its partitioning among roots and shoots */
+
 {
     int i, toproots = 0;
     double gw, belowgwt = 0, abovegwt = 0, rootsadded, litter, f, totalroots, f_senescence, b, litterfac, T, maxLAI, minLAI, minBiomass, oldBiomass, oldrootmass, oldshoots, plantrespC, rootresp, overshoot;
@@ -348,7 +349,6 @@ double PARcalc()
 {
     double par = 0.0; // photosynthetically active radiation in joule per square meter per day
     double shortwave = 0.0; // total daily shortwave radiation joule per square cm
-    double parfrac = 0.5; // fraction of shortwave light that is par
     double aa; // solar declination
     double c = 0.45, d = 0.9, ni = 1.0; // coeff eq A3 Haxeltine and Prentice
     double beta = 0.17; // albedo eq A3 Haxeltine and Prentice
@@ -381,15 +381,15 @@ double PARcalc()
     {
         par = PARData(StepNr); // no conversion for ProductionModel 4
         if (ProductionModel == 3) {     // convert par from umol m-2 s-1 to J m-2 day-1
-            par = par / (parfrac * RE2PHOTONS) * (3600 * twentyfour);}
+            par = par / RE2PHOTONS * (3600 * twentyfour);
+        }
     // ervan uitgaande dat de PAR het totaal is over de daglengte
     } else if (RADunits == 1) // input file is total daily radiation in J cm-2 day-1
     {
         //  convert total daily radiation in J cm-2 day-1 to PAR J m-2 day-1
-        par = PARData(StepNr) * 1.0e4 * parfrac;   // no further conversion forProductionModel 3
-//swfrac should be 1 since the weather station data is already shortwave
-        //if (ProductionModel == 4) {par = (par / (DayLength * 3600)) * 4.6035;} 
-        if (ProductionModel == 4) {par = (par / (twentyfour * 3600)) * parfrac * RE2PHOTONS ;}
+        //par = PARData(StepNr) * 1.0e4 * parfrac;   // no further conversion forProductionModel 3
+        par = PARData(StepNr) * 1.0e4 * TR2PARCONV;   // no further conversion forProductionModel 3
+        if (ProductionModel == 4) {par = (par / (twentyfour * 3600)) * RE2PHOTONS ;}
         // convert PAR from J m-2 day-1 to umol m-2 s-1
         // Divide by seconds of daylight hr-1 (3600)
         // multiplication factor (4.6035) is derived from https://www.berthold.com/en/bio/how-do-i-convert-irradiance-photon-flux
@@ -400,12 +400,11 @@ double PARcalc()
         zz = u * h * 2 * PI / 24.0 + 2 * v * sin(h * PI /24.0); // correct integral 
         Q0 = 3600.0 * SOLARCONSTANT *(1 + 2 * 0.01675 * cos(DEG2RAD * (360.0 * DayOfTheYear / YEAR))); // incoming radiation based on solar constantant and variations in earth's orbit
         Rs = zz * (c + d * ni) * (1 - beta) * Q0;
-        par = Rs * (1 - B * cloudcover) * parfrac;  // equation 1a in Hurley and Boers 1996
+        par = Rs * (1 - B * cloudcover) * TR2PARCONV;  // equation 1a in Hurley and Boers 1996
         // For ProductionModel 3 (PAR J m-2 day-1) no further conversion required
         if (ProductionModel == 4)
             // convert PAR from J m-2 day-1 to umol m-2 s-1
-            //{par = (par / (DayLength * 3600)) * 4.6035;} 
-            {par = (par / (twentyfour * 3600)) * parfrac *  RE2PHOTONS;}
+            {par = (par / (twentyfour * 3600)) *  RE2PHOTONS;}
     } else {
         cout << PRODUCTION_ERROR3 << endl;
         exit(EXIT_FAILURE);
