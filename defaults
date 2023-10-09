@@ -92,6 +92,7 @@ KAnaerobic = [0.005 0.01 0.01 0.01 0.01 0.01 0.0001]; % Anaerobic decomposition 
 Q10Anaerobic = 3.5;                             % Q10 anaerobic decomposition (reference temperature is equal to MethaneTref)
 AnaerobicDARatio = 30.0;                    % Anaerobic Dissimilation/Assimililation ratio
 KLitter = 0.5;                                  % Decomposition constant for standing dead biomass and above-ground litter
+KPeatCN = [10 0.00021];         % constants linear relation of decomposition rate k of peat with CN ratio, first is reference CN, second slope of the decrease of k with one CN unit
 
 % PARAMETERS ORGANIC MATTER PRODUCTION
 
@@ -171,9 +172,8 @@ ManureLayers = [0.5 0.75; 0.3 0.25; 0.2 0];
 MethaneReservoirs = [0.0001 1 1 1 0.5 0 0];   % This parameter tells which reservoirs are summed for calculating methane production from easily decomposed
                                          % organic matter reservoirs. It allows to delete or reduce some reservoirs; 
                                          
-MethaneR0 = 0.4;                         % Methane production rate factor for fresh organic C milliMol/h/m3
+MethaneR0 = 0.01;                        % Methane production rate factor for fresh organic C micromol CH4-C / milliMol reservoir C /h
                                          % SITE-SPECIFIC PARAMETER, CAN BE USED TO TUNE THE MODEL
-                                         % Walther & Heimann 2000: values between 0.3 and 0.6 at high latitude sites and 2.8 at tropical site
 CO2CH4ratio = 0.5;                       % Molar ratio between CH4 and CO2 production; for acetate splitting this is 0.5, for CO2 reduction 0.0,
                                          % may also be a number between 0.0 and 0.5; the smaller the value, the larger amount of CH4 is produced over CO2
 

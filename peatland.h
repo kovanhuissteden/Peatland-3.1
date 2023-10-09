@@ -123,7 +123,7 @@ double RootAeration = 0;                // Root mass dependent correction (0 - 1
 double PrimingCorrection = 0;           // Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
 Matrix Kdecay(7);                       // SOM decomposition constants for each reservoir
 Matrix AerobicQ10(7);                   // Q10 or Arrhenius molecular activation rate for each reservoir
-//Matrix KPeatCN(2);                      // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
+Matrix KPeatCN(2);                      // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
 Matrix SplitRes;                        // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
 //Matrix KPeat;                           // Horizon-C/N dpendent peat decomposition rate
 int Q10orArrhenius = 0;                 //Switch between temperature correction of (an)aerobic decomposition as Q10 (0) or Arrhenius (1) equation

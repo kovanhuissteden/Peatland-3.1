@@ -84,7 +84,7 @@ void Methane()
   double dtfac, dt, dth, ebullflux = 0.0, plantflux = 0.0, rho, next, prev, topflux, ttime, methair;
   Matrix CH4oxidation, cres, cresstart, va, diff, cc, ccn, ccstart, dc, totprod, ebullrate, plantrate, prod, CO2production, totalCO2, anaerob, anaerobCO2, Closs, Cremoved, mp;
 
-// ALL CALCULATIONS IN MILLIMOLES 
+// ALL CALCULATIONS IN MILLIMOLES C
  
   MethaneFlux.Fill(0.0);                  // methane flux totalled per time step
   Closs.Resize(NrLayers, NrReservoirs);   // carbon loss from reservoirs in millimoles C in layer volume

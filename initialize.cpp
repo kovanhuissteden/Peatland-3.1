@@ -498,14 +498,7 @@ Decompositon constant for peat is corrected by C/N ratio of layers */
     SplitRes(i, 2) = ResistFrac;
     SplitRes(i, 3) = 1.0 / (1.0 + AnaerobicDARatio);    // partitioning coefficient to microbial biomass from anaerobic CO2
   }
-/*  KPeat.Resize(NrLayers);                               // C/N ratio dependent k for peat REMOVED; NOT USED IN THE MODEL!
 
-  for (i = 1; i <= NrLayers; i++)
-  {
-    a = (int)Layers(i,4);                               // soil horizon index
-    k = KPeatCN(1) - KPeatCN(2) * CNRatio(a);           // correct k for CN based on empirical linear relation
-    KPeat(i) = k + k * c;                               // apply correction as above
-  } */
 // SplitRes: fractions of the decayed component that are tranferred from primary to secondary reservoir
 // transfer to biomass: to be based on dissimilation/assimilation ratio, 2 for fungi and 2.3 for bacteria,
 // and death rate of biomass
@@ -555,9 +548,19 @@ void InitMethaneModel()
       exit(EXIT_FAILURE);
     }
 
-    mc = mc * LayerThickness;
-  // convert MethaneR0 from millimol/h/m3 to millimol/hr/layer volume
+   // mc = mc * LayerThickness; !!!! erroneaous, methane reservoirs are already per layer volume
 
-    MethaneR0Corr(i) = mc;
+   //Choice of units for MethaneR0:
+   // micromol CH4-C / millimol reservoir C /hour  Deze heeft de voorkeur omdat de berekeningen in millimol C worden gedaan en naar CH4 worden omgeekend
+   // Dan hier wel conversie van micromol C naar millimmol C
+   // micromol CH4 / millimol C reservoir C   /hour
+   // millimol CH4-C / millimol C reservoir C /hour
+   // millimol CH4 / millimol  reservoir C /hour
+   // Check with calculation in MethaneProd function, and adapt description in manual, eventually add conversion here
+   // in methane functions all calculations are in millimoles C
+
+  // convert MethaneR0 from micromomol CH4-C/ millimol reservoir C / hour to micromomol CH4-C/ millimol reservoir C /
+
+    MethaneR0Corr(i) = mc / 1000;
   }
 }

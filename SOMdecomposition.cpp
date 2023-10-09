@@ -43,7 +43,7 @@ soil moisture and soil dryness corrections
 Priming correction                                                         */
 {
   int i, j, a;
-  double t, pHcorr, drynesscorr, wetnesscorr, hs, h, s, growfac;
+  double t, pHcorr, drynesscorr, wetnesscorr, hs, h, s, growfac, CNcorr;
   Matrix roots, priming, tcorr;
 
   roots = RootMass / RootMass.Sum();              // initialize everything
@@ -54,6 +54,12 @@ Priming correction                                                         */
   for (i = 1; i <= NrLayers; i++)
   {
     a = (int)Layers(i,4); // a is reference to soil horizon
+    CNcorr = 1.0 + ((KPeatCN(1) - CNRatio(a)) * KPeatCN(2)) / Kdecay(1);   // correct k for CN based on empirical linear relation
+    if (CNcorr <= 0.0) //guard against negative values of k
+    {
+        cout << ERRORMSGK << endl;
+        exit(EXIT_FAILURE);
+    }
     t = SoilTemp(i);
     if (Q10orArrhenius == 0) {
         for (j = 1; j <= NrReservoirs; j++) tcorr(j) = pow(AerobicQ10(j), (t - T_ref) / 10.0); // temperature correction based on per reservoir specified Q10
@@ -85,8 +91,9 @@ Priming correction                                                         */
       priming(1) = 1.0 + roots(i) * PrimingCorrection * growfac * SpringFactor;  // correction for peat
       priming(NrReservoirs) =  priming(1);                                 // correction for humus
     }
+    CorrFac(i, 1) = CNcorr * priming(1) * tcorr(1) * pHcorr * drynesscorr * wetnesscorr; // for peat the decomposition rate is also corrected for C/N ratio
+    for (j = 2; j <= NrReservoirs; j++) CorrFac(i, j) = priming(j) * tcorr(j) * pHcorr * drynesscorr * wetnesscorr;
     // final calculation of environmental correction per reservoir and per layer
-    for (j = 1; j <= NrReservoirs; j++) CorrFac(i, j) = priming(j) * tcorr(j) * pHcorr * drynesscorr * wetnesscorr;
   }
 }   // end Envicor
 

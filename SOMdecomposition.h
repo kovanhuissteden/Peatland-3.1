@@ -18,6 +18,7 @@
 //#include "matrix.h"
 
 /************************ GLOBAL VARIABLES ***********************************/
+#define ERRORMSGK     "Negative peat decomposition rate, check CHrato and KPeatCN values"
 
 extern Matrix CorrFac;            // environmental correction factors for aerobic SOM decomposition constants k
 extern Matrix RootMass;           // initial root distribution (kg C/m2 in each layer)
@@ -42,6 +43,8 @@ extern double PrimProd;           // Primary production per time step
 extern double Timestep;           // model timestep
 extern double SpringFactor;       // instantaneous value of spring correction, declared global for use by environmental correction SOM decomposition for priming effect
 extern Matrix Kdecay;             // SOM decomposition constants for each reservoir
+extern Matrix CNRatio;                    // CN ratios for eac soil layer; the decomposition of peat can be made dependent on these
+extern Matrix KPeatCN;                    // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
 extern Matrix AerobicQ10;                // Q10 for each reservoir
 extern int Q10orArrhenius;             //Switch between temperature correction of (an)aerobic decomposition as Q10 (0) or Arrhenius (1) equation
 extern double AnaerobicAssimDissim;      // Assimiltion/Dissimilation ratio anaeroob

@@ -475,7 +475,7 @@ int readall()                     // read all parameters
 {
   double x;
   double *buf;
-  int count = 0, found = FALSE, len, r, c, maxpar = 119;
+  int count = 0, found = FALSE, len, r, c, maxpar = 120;
 
 
 
@@ -640,10 +640,9 @@ int readall()                     // read all parameters
   if (!found) found = readarray(AerobicQ10.Data(), &len, "AerobicQ10", DEFAULTS, TRUE);
   count += found;
   len = 2;
-/*  found = readarray(KPeatCN.Data(), &len, "KPeatCN", ParamFile, FALSE);
+  found = readarray(KPeatCN.Data(), &len, "KPeatCN", ParamFile, FALSE);
   if (!found) found = readarray(KPeatCN.Data(), &len, "KPeatCN", DEFAULTS, TRUE);
-  count += found; */
-
+  count += found;
   found = readscalar(&ShootsFactor, "ShootsFactor", ParamFile, FALSE);
   if (!found) found = readscalar(&ShootsFactor, "ShootsFactor", DEFAULTS, TRUE);
   count += found;
