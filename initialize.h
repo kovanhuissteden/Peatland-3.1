@@ -20,7 +20,8 @@
 #define INIT_ERROR2 "Cannot open file: "
 #define INIT_ERROR3 "Negative methane production rate, check MethaneR0 and pH correction"
 #define OUTPUT1     "temperature.dat"
-#define OUTPUT2     "moisture.dat"
+#define OUTPUT2A    "moisture.dat"
+#define OUTPUT2B    "saturation.dat"
 #define OUTPUT3     "methane.dat"
 #define OUTPUT4     "roots.dat"
 #define OUTPUT5     "labileSOM.dat"
@@ -130,7 +131,8 @@ extern Matrix OldSOM;
 extern Matrix PeatDecay;                  // logs true loss of peat matrix
 extern Matrix ProfileOutput;              // determines which vertical profiles are sent to log files
 extern ofstream *output1;                 // output log files
-extern ofstream *output2;
+extern ofstream *output2a;
+extern ofstream *output2b;
 extern ofstream *output3;
 extern ofstream *output4;
 extern ofstream *output5;

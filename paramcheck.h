@@ -25,6 +25,7 @@
 #define PARAM_ERROR5 "Initial methane profile and number of layers do not match."
 #define PARAM_ERROR6 "Matrices Manure and ManureLayers should have 2 columns and ManureLayers no more layers than model."
 #define PARAM_ERROR7 "Columns of Matrix ManureLayers should sum to one. "
+#define PARAM_ERROR8 "If soil moisture is supplied by file, also the water table has to be applied by file."
 #define PARAM_WARNING1 "WARNING: Q10 values not in agreement with chosen decomposition temperature correction equation in Q10orArrhenius."
 
 extern BOOLEAN Verbose;                  // output flag on-screen output
@@ -51,6 +52,8 @@ extern int Q10orArrhenius;             //Switch between temperature correction o
 extern Matrix AerobicQ10;                // Q10 for each reservoir
 extern double Q10Anaerobic;       // Q10 anaerobic decomposition
 extern int AnaerobicCO2;          // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2
+extern char SoilMoistureFile[];              // file where soil moisture profile time series is stored;
+extern char GwFile[];                    // file where the groundwater table time series is stored;
 /************************ FUNCTION HEADERS ************************************/
 
 void Porevol();

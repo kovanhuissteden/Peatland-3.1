@@ -137,7 +137,7 @@ Because pF curves of peat soils tend to be steep with pF values > 1, the interva
 			}
 		}
 	}
-	// pFCurves.Disp();
+
   for (i = 1; i <= NrHorizons; i++)                  // check the contents of InitRes
   {
     total = 0;
@@ -168,6 +168,11 @@ Because pF curves of peat soils tend to be steep with pF values > 1, the interva
   {
     ok = false;
     cout << PARAM_ERROR7 <<endl;
+  }
+  // if soil moisture is by file, there should also be a groundwater table file
+  if ((strlen(SoilMoistureFile) > 0) & (strlen(GwFile) == 0)) {
+      ok = false;
+      cout << PARAM_ERROR8 <<endl;
   }
   return ok;
 }

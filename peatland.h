@@ -235,7 +235,7 @@ double DayMinGW = 220;                  // day of minimum groundwater table
 double MinGW = 0.25;                    // lowest water table level (m below surface)
 double AmplitudeGW = 0.20;              // amplitude of water table movement
 char GwFile[256] = "";                  // file where the groundwater table time series is stored; if empty a sinusoidal time series is assumed
-char SoilMoisture[256] = "";            // file where soil moisture profile time series is stored; if empty the soil moisture will be calculated using very simplified assumptions
+char SoilMoistureFile[256] = "";            // file where soil moisture profile time series is stored; if empty the soil moisture will be calculated using very simplified assumptions
 char PrecipFile[256] = "";              // file where the precipitation time series is stored; if empty the water table is assumed to be read from file
 char EvapFile[256] = "";                // file where the evaporation time series is stored; if empty the water table is assumed to be read from file
 double T_average = 10.5;                // average yearly temperature
@@ -347,7 +347,8 @@ Matrix CarbonBalance;                   // Carbon balance: primary production, C
 
 Matrix ProfileOutput;                    // determines which vertical profiles are sent to log files
 ofstream *output1;                       // output log files
-ofstream *output2;
+ofstream *output2a;
+ofstream *output2b;
 ofstream *output3;
 ofstream *output4;
 ofstream *output5;

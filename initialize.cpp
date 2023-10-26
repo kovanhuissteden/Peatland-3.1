@@ -275,6 +275,7 @@ void InitWater()
 	Evaporation = Evaporation / 1000.0;
     if (strlen(RunOnFile) != 0) RunOn = RunOn / 1000.0;
   }
+  MoistTheta.Resize(NrLayers);            // initialize theta array
 }
 
 void InitLogFiles()
@@ -298,10 +299,18 @@ void InitLogFiles()
     }
     if (ProfileOutput(i) == 2)
     {
-      output2 = new ofstream(strcat(buf, OUTPUT2));
-      if (!output2)
+      output2a = new ofstream(strcat(buf, OUTPUT2A));
+      if (!output2a)
       {
-        cout  << INIT_ERROR2 << OUTPUT2 << endl;
+        cout  << INIT_ERROR2 << OUTPUT2A << endl;
+        exit(EXIT_FAILURE);
+      }
+      strcpy(buf, &DataDir[0]);
+      strcat(buf, &OutputFilePrefix[0]);
+      output2b = new ofstream(strcat(buf, OUTPUT2B));
+      if (!output2b)
+      {
+        cout  << INIT_ERROR2 << OUTPUT2B << endl;
         exit(EXIT_FAILURE);
       }
     }
@@ -359,15 +368,15 @@ void InitLogFiles()
             exit(EXIT_FAILURE);
         }
     }
-      if (ProfileOutput(i) == 9)
-      {
-          output9 = new ofstream(strcat(buf, OUTPUT9));
-          if (!output9)
-          {
-              cout  << INIT_ERROR2 << OUTPUT9 << endl;
-              exit(EXIT_FAILURE);
-          }
-      }
+    if (ProfileOutput(i) == 9)
+    {
+        output9 = new ofstream(strcat(buf, OUTPUT9));
+        if (!output9)
+        {
+            cout  << INIT_ERROR2 << OUTPUT9 << endl;
+            exit(EXIT_FAILURE);
+        }
+    }
     if (ProfileOutput(i) == 11)
     {
       output11 = new ofstream(strcat(buf, OUTPUT11));
@@ -441,7 +450,10 @@ int i;
   for (i = 1; i <= ProfileOutput.Length(); i++)
   {
     if (ProfileOutput(i) == 1) output1->close();
-    if (ProfileOutput(i) == 2) output2->close();
+    if (ProfileOutput(i) == 2) {
+        output2a->close();
+        output2b->close();
+    }
     if (ProfileOutput(i) == 3) output3->close();
     if (ProfileOutput(i) == 4) output4->close();
     if (ProfileOutput(i) == 5) output5->close();

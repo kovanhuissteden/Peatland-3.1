@@ -40,7 +40,8 @@ extern Matrix OldSat;                     // saturation values at previous time 
 extern Matrix LastSatTime;                // Time after last complete saturation of layer in days
 extern Matrix PoreVol;                    // Porosity each layer
 extern int StepNr;                        // time step number during iteration
-extern ofstream *output2;                 // output stream soil moisture profile
+extern ofstream *output2a;                 // output stream soil moisture profile
+extern ofstream *output2b;
 extern ofstream *output7;                 // output stream water table
 extern Matrix ProfileOutput;              // determines which vertical profiles are sent to log files
 extern Matrix MatricPotential;            // matric potential of model soil layer

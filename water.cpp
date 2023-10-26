@@ -310,7 +310,6 @@ void Watertable()
 
 {
 	
-	//Matrix result(13);  // temporary code for debugging, set to Matrix result(2) later
 	Matrix result(2);
 	double base, V, dV, Vnew, maxV, Vbelow, runoff = 0.0, z, oldGW, cursign, startsign, p, prev, frozen = 0.0, dfrozen = 0.0, snowmelt = 0.0;// V: water volume in the soil
     double drainage = 0.0;
@@ -434,7 +433,7 @@ void Watertable()
 	}
 	result(2) = CurrentGW;
 	result(1) = Timer + 0.5 * Timestep;
-	if (ProfileOutput.Contains(7))               
+	if (ProfileOutput.Contains(7))
 	{
 		result.Write(output7);
 	}
@@ -445,33 +444,39 @@ void Moisture(int initial)
 groundwater table */
 {
   int a, i, j;
-  double h, w, lh, theta, t, s;
+  double h, w, lh, theta, t, s, currenttime;
+  Matrix result(2);
 
-  if (initial) MatricPotential.Resize(NrLayers); else MatricPotential.Fill(0.0);  // array for matric potential
   t = StepNr;
-  if (MoistProfiles.Length() > 1)     // if defined use observational data or soil moisture model output
+  if (initial) MatricPotential.Resize(NrLayers); else MatricPotential.Fill(0.0);  // array for matric potential
+  if (WatertableModel < 2) {
+      CurrentGW = GwData((int)t);  // groundwater level if not modelled; also write to output
+	  currenttime = Timer + 0.5 * Timestep;
+      result(1) = currenttime;
+      result(2) = CurrentGW;
+	  if (ProfileOutput.Contains(7))
+	  {
+		if (!initial) result.Write(output7);
+	  }
+  }
+  if (MoistProfiles.Length() > 1)     // if present, use observational data or soil moisture model output
   {
     MoistTheta = MoistProfiles.Row((int)t);  // store soil moisture
     for (i = 1; i <= NrLayers; i++)     // interpolate corresponding matric potential from pf curves
-    {
-      /*a = (int)Layers(i, 4);
-      j = 1;
-      while ((MoistTheta(i) < pFCurves(a, j)) && (j < pFCurves.Cols())) j++;
-      if ((j > 1) && (j < pFCurves.Cols())) MatricPotential(i) = pFVal(j - 1) + (pFVal(j) - pFVal(j - 1)) * (pFCurves(a, j - 1) - MoistTheta(i)) / (pFCurves(a, j - 1) - pFCurves(a, j)); else MatricPotential(i) = pFVal(j);
-	  */
-
-	  a = 1;  // find horizon to which the midpoint of the layer belongs
-	  while ((a * LayerThickness - 0.5 * LayerThickness) < Horizons(a)) a++;
-	  a--;
+    { // matric potential needs to be known for correction of decomposition rate for moisture in SOMdecomposition.cpp
+      a = (int)Layers(i, 4);
 	  j = 1;
       while ((MoistTheta(i) < pFCurves(a, j)) && (j < pFCurves.Cols())) j++;
 	  if ((j > 1) && (j < pFCurves.Cols())) MatricPotential(i) = log10(j); else MatricPotential(i) = log10(pFCurves.Cols());
+/* If the soil moisture is read from file, also the water table should be supplied in a file.
+ * The soil moisture from file is here corrected with water table, to be sure that all layers below the water table are saturated
+ */
+      if (Layers(i, 1) <= CurrentGW) MoistTheta(i) = pFCurves(a, j);
     }
   }
   else
   {
     if (initial) MoistTheta.Resize(NrLayers);            // initialize theta array
-    if (WatertableModel < 2) CurrentGW = GwData((int)t);                          // groundwater level
 	if (CurrentGW > 0.0) PondedWater = CurrentGW; else PondedWater = 0.0;
     for (i = 1; i <= NrLayers; i++)
     {
@@ -479,40 +484,29 @@ groundwater table */
       a = (int)Layers(i, 4);                             // soil profile horizon number
       MoistTheta(i) = Porosity(a);                       // basic assumption: layer is saturated
       h = Layers(i, 1) - CurrentGW;                      // position of groundwater table with reference to layer top
-/* !!!!!!!! NOTE: contratrary to the former version of PEATLAND, the layer top, the layer is not saturated
+/* NOTE: contratrary to the former version of PEATLAND, the layer is not saturated
 if the groundwater table is anywhere below the top of the layer. If the water table is within the layer
 the volumetric water content is computed based on the water content of the saturated part end the theta for
 based on the potential halfway the unsaturated part. */
-      if (h > 0.00001)                                   // layer wholly or partly above the water table
+      if (h > 0.00001)                                   // layer completely or partly above the water table
       {
-        if (h >= LayerThickness)                         // layer wholly above the water table
+        if (h >= LayerThickness)                         // layer completely above the water table
         {
           //lh = log10(100 * (h - 0.5 * LayerThickness));  // water content based on tension halfway layer
 		  lh = 100 * (h - 0.5 * LayerThickness);  // water content based on tension halfway layer
+          w = 0.0;
         } else
         {
-          //lh = log10(100 * (0.5 * h));                   // water content based on tension halfway unsaturated part
-		  lh = 100 * (0.5 * h);								// water content based on tension halfway unsaturated part
+		  lh = 100 * (0.5 * h);								// water content based on tension at top of unsaturated part
           w = ((LayerThickness - h) / LayerThickness) * Porosity(a); // water contribution from saturated part
         }
-        // if (lh > 0) MatricPotential(i) = lh; else MatricPotential(i) = 0; // store matric potential for later use in environmental correction
 		if (lh > 1.0) MatricPotential(i) = log10(lh); else MatricPotential(i) = 0; // store matric potential for later use in environmental correction
         j = (int)(floor(lh));
 		theta = pFCurves(a, j + 1) + (lh - j) * (pFCurves(a, j + 1) - pFCurves(a, j + 2));
 		// theta is interpolated from suction curve lookup table with 1 cm resolution
-		// it contains all suction values that can occur in the profile
-		if (h < LayerThickness) theta = w + h * theta / LayerThickness; // in partly saturated layer account for water in saturated par
+		if (h < LayerThickness) theta = w + h * theta / LayerThickness; // in a partly saturated layer account for water in saturated part
 		MoistTheta(i) = theta;                           // store theta in moisture profile array
 		
-		/*
-		old code based on interpolation of pF values
-		j = 1;
-        while (lh > pFVal(j)) j++;
-        if (j == 1) theta = Porosity(a);                 // layer saturated
-        else if (j >= pFVal.Length()) theta = 0; else    // layer practically dry
-        theta = pFCurves(a, j) + ((lh - pFVal(j - 1))/ (pFVal(j) - pFVal(j - 1))) * (pFCurves(a, j - 1) - pFCurves(a, j)); // otherwise interpolate theta frompF curv
-        if (h < LayerThickness) theta = w + h * theta / LayerThickness; // in partly saturated layer account for water in saturated part
-        MoistTheta(i) = theta;                           // store theta in moisture profile array */
       }
     }
   }
@@ -536,6 +530,9 @@ based on the potential halfway the unsaturated part. */
     } else LastSatTime(i) = 0.0;
   }
   TopSat +=1;
-  if ((!initial) && ProfileOutput.Contains(2)) Saturation.Write(output2);
+  if ((!initial) && ProfileOutput.Contains(2)){
+      Saturation.Write(output2b);
+      MoistTheta.Write(output2a);
+  }
 }
 

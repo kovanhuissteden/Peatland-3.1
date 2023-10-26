@@ -202,10 +202,10 @@ extern Matrix InitMethane;               // Initial methane concentration profil
 extern double DayMinGW;                  // day of minimum groundwater table
 extern double MinGW;                     // lowest water table level at this day (m below surface)
 extern double AmplitudeGW;               // amplitude of water table movement
-extern char GwFile[];                    // file where the groundwater table time series is stored; if empty a sinusoidal time series is assumed
+extern char GwFile[];                    // file where the groundwater table time series is stored;
 extern char PrecipFile[];             // file where the precipitation time series is stored; if empty the water table is assumed to be read from file
 extern char EvapFile[];               // file where the evaporation time series is stored; if empty the water table is assumed to be read from file
-extern char SoilMoisture[];              // file where soil moisture profile time series is stored; if empty the soil moisture will be calculated using very simplified assumptions
+extern char SoilMoistureFile[];  // file where soil moisture profile time series is stored; if empty the soil moisture will be calculated using very simplified assumptions
 extern Matrix MoistProfiles;             // Matrix with soil moisture profiles from observational data or other model
 
 extern double T_average;                 // average yearly temperature

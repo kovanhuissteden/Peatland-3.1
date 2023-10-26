@@ -908,8 +908,8 @@ int readall()                     // read all parameters
   found = readstring(SoilProfile, "SoilProfile", ParamFile, FALSE);
   if (!found) found = readstring(SoilProfile, "SoilProfile", DEFAULTS, TRUE);
   count += found;
-  found = readstring(SoilMoisture, "SoilMoisture", ParamFile, FALSE);
-  if (!found) found = readstring(SoilMoisture, "SoilMoisture", DEFAULTS, TRUE);
+  found = readstring(SoilMoistureFile, "SoilMoisture", ParamFile, FALSE);
+  if (!found) found = readstring(SoilMoistureFile, "SoilMoisture", DEFAULTS, TRUE);
   len = 0;
   found = readarray(buf, &len, "ProfileOutput", ParamFile, FALSE);
   if (!found) found = readarray(buf, &len, "ProfileOutput", DEFAULTS, TRUE);
@@ -1101,14 +1101,15 @@ int readsoil(char *soilname)          // reads soil profile from the file specif
       if (Verbose) cout << "Taking evaporation data from file: " << EvapFile << " for water table module" << "\n";
     }
   }
-  if (strlen(SoilMoisture) != 0)                            // read soil moisture time series
+  if (strlen(SoilMoistureFile) != 0)                            // read soil moisture time series
   {
     MoistProfiles.Resize(NrOfSteps, NrLayers);
-    if (readTseries(MoistProfiles.Data(), SoilMoisture, NrOfSteps, NrLayers) < NrOfSteps)
+    if (readTseries(MoistProfiles.Data(), SoilMoistureFile, NrOfSteps, NrLayers) < NrOfSteps)
     {
-      cout << ERRORMSG9 << SoilMoisture << " Soil moisture time series" << endl;
+      cout << ERRORMSG9 << SoilMoistureFile << " Soil moisture time series" << endl;
       count--;
-    } else if (Verbose) cout << "Taking soil moisture data from file: " << SoilMoisture <<"\n";
+    } else if (Verbose) cout << "Taking soil moisture data from file: " << SoilMoistureFile <<"\n";
+    WatertableModel = 0;
   }
   if (strlen(DrainageFile) != 0)                            // read soil moisture time series
   {

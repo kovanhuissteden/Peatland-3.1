@@ -93,9 +93,8 @@ int main(int argc, char *argv[])
     for (i = 1; i <= NrOfSteps; i++)                        // model iteration
     {
         if (WatertableModel == 2) Watertable();				  // calculate watertable
-        Temperature();                                        // soil temperature
         Moisture(FALSE);                                      // soil moisture profile
-
+        Temperature();                                        // soil temperature
         OldSOM = NewSOM;
         OrgProd();                                            // Net primary production and partitioning among roots and shoots
         //cout << NewSOM(1,4) - OldSOM(1,4) << " " << NewSOM(2,4) - OldSOM(2,4) << " "  << NewSOM(3,4) - OldSOM(3,4) << endl;
