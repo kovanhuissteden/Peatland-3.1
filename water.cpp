@@ -309,7 +309,6 @@ void Watertable()
 /* calculates water table position from precipitation and evaporation*/
 
 {
-	
 	Matrix result(2);
 	double base, V, dV, Vnew, maxV, Vbelow, runoff = 0.0, z, oldGW, cursign, startsign, p, prev, frozen = 0.0, dfrozen = 0.0, snowmelt = 0.0;// V: water volume in the soil
     double drainage = 0.0;
@@ -492,7 +491,6 @@ based on the potential halfway the unsaturated part. */
       {
         if (h >= LayerThickness)                         // layer completely above the water table
         {
-          //lh = log10(100 * (h - 0.5 * LayerThickness));  // water content based on tension halfway layer
 		  lh = 100 * (h - 0.5 * LayerThickness);  // water content based on tension halfway layer
           w = 0.0;
         } else
@@ -506,7 +504,6 @@ based on the potential halfway the unsaturated part. */
 		// theta is interpolated from suction curve lookup table with 1 cm resolution
 		if (h < LayerThickness) theta = w + h * theta / LayerThickness; // in a partly saturated layer account for water in saturated part
 		MoistTheta(i) = theta;                           // store theta in moisture profile array
-		
       }
     }
   }

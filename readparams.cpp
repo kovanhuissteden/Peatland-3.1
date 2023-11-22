@@ -145,7 +145,7 @@ argc and argv are the variables passed to main */
 }
 
 
-int readstring(char x[], const char *ident, const char *filename, const int verbose)  // reads a string parameter
+int readstring(char x[], const char *ident, const char *filename, const int check)  // reads a string parameter
 /*  x       : variable to be read
     ident   : identification label in the file for the variable
     filename: the name of the file where x is stored
@@ -187,13 +187,11 @@ int readstring(char x[], const char *ident, const char *filename, const int verb
     }
     file.close();
   }
-
-  //if (!found) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
-  if ((!found) & (strcmp(filename, DEFAULTS) == 1)) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
+  if ((!found) && check) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
   return found;
 }
 
-int readscalar(double *x, const char *ident, const char *filename, const int verbose)  // reads a single value parameter
+int readscalar(double *x, const char *ident, const char *filename, const int check)  // reads a single value parameter
 /*  x       : variable to be read
     ident   : identification label in the file for the variable
     filename: the name of the file where x is stored
@@ -237,13 +235,11 @@ int readscalar(double *x, const char *ident, const char *filename, const int ver
     }
     file.close();
   }
-
-  // if ((!found) & verbose) cout << "Variable " << ident << " not found in file " << filename << endl;
-  if ((!found) & (strcmp(filename, DEFAULTS) == 1)) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
+  if ((!found) && check) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
   return found;
 }
 
-int readarray(double *x, int *len, const char *ident, const char *filename,  const int verbose)                    // reads an array
+int readarray(double *x, int *len, const char *ident, const char *filename,  const int check)                    // reads an array
 /*  x       : variable to be read
     l       : the length of the array; if > 0 this determines the maximum number of array ellements read from the file
     ident   : identification label in the file for the variable
@@ -304,12 +300,11 @@ int readarray(double *x, int *len, const char *ident, const char *filename,  con
     }
     file.close();
   }
-  //if ((!found) & verbose) cout << "Variable " << ident << " not found in file " << filename << endl;
-  if ((!found) & (strcmp(filename, DEFAULTS) == 1)) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
+  if ((!found) && check) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
   return found;
 }
 
-int readmatrix(double *x, int *r, int *c, const char *ident, const char *filename,  const int verbose)           // reads a matrix
+int readmatrix(double *x, int *r, int *c, const char *ident, const char *filename,  const int check)           // reads a matrix
 /*  x       : variable to be read
     r       : number of rows
     c       : number of columns
@@ -406,8 +401,7 @@ int readmatrix(double *x, int *r, int *c, const char *ident, const char *filenam
     }
     file.close();
   }
-  if ((!found) & (strcmp(filename, DEFAULTS) == 1)) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
-
+  if ((!found) && check) cout << "PARAMETER MISSING! Variable " << ident << " not found in file " << filename << endl;
   return found;
 }
 
@@ -429,14 +423,6 @@ int readHarvest(char *harvestIN)
       exit(EXIT_FAILURE);
     }
 
-    /*if(file.is_open()){
-        while(!file.eof())
-        {
-            getline(file, line);
-            lines++;
-        }
-    file.close();}
-*/
     r = lines; //number of harvest dates (number of lines)
     c = 4; // YY, MM, DD, height 
 
@@ -475,7 +461,7 @@ int readall()                     // read all parameters
 {
   double x;
   double *buf;
-  int count = 0, found = FALSE, len, r, c, maxpar = 120;
+  int count = 0, found = FALSE, len, r, c, maxpar = 109;
 
 
 
@@ -485,31 +471,27 @@ int readall()                     // read all parameters
     cout << "Memory allocation error data read buffer" << endl;
     exit(EXIT_FAILURE);
   }
-  count += readscalar(&x, "NrLayers", DEFAULTS, TRUE);                // read first the fixed parameters of the model configuration and constants
+ // read first the model configuration, can be defined only in the defaults file
+  count += readscalar(&x, "NrLayers", DEFAULTS, TRUE);
   NrLayers = (int)x;
   count += readscalar(&LayerThickness, "LayerThickness", DEFAULTS, TRUE);
- // read first the model configuration and constants
-  count += readscalar(&DensOrg, "DensOrg", DEFAULTS, TRUE);
-  count += readscalar(&DensMin, "DensMin", DEFAULTS, TRUE);
-  count += readscalar(&HCOrg, "HCOrg", DEFAULTS, TRUE);
-  count += readscalar(&DensWater, "DensWater", DEFAULTS, TRUE);
-  count += readscalar(&DensIce, "DensIce", DEFAULTS, TRUE);
-  count += readscalar(&HCMiner, "HCMiner", DEFAULTS, TRUE);
-  count += readscalar(&HCAir, "HCAir", DEFAULTS, TRUE);
-  count += readscalar(&HCWater, "HCWater", DEFAULTS, TRUE);
-  count += readscalar(&HCIce, "HCIce", DEFAULTS, TRUE);
-  count += readscalar(&CondOrg, "CondOrg", DEFAULTS, TRUE);
-  count += readscalar(&CondQuartz, "CondQuartz", DEFAULTS, TRUE);
-  count += readscalar(&CondMiner, "CondMiner", DEFAULTS, TRUE);
-  count += readscalar(&CondAir, "CondAir", DEFAULTS, TRUE);
-  count += readscalar(&CondWater, "CondWater", DEFAULTS, TRUE);
-  count += readscalar(&CondIce, "CondIce", DEFAULTS, TRUE);
-  count += readscalar(&CondSnow, "CondSnow", DEFAULTS, TRUE);
   len = 3;
   count += readarray(LatentHeat.Data(), &len, "LatentHeat", DEFAULTS, TRUE);
-  count += readscalar(&Rgas, "Rgas", DEFAULTS, TRUE);
-  count += readscalar(&MethaneDiff, "MethaneDiff", DEFAULTS, TRUE);
-  count += readscalar(&MethaneDiffWater, "MethaneDiffWater", DEFAULTS, TRUE);
+// Constants that belong to the model configuration should also be defined in the Defaults file only;
+// these determine porosity calculations and should match the parameters in the soil file as much as possible
+  count += readscalar(&DensOrg, "DensOrg", DEFAULTS, TRUE);
+  count += readscalar(&DensMin, "DensMin", DEFAULTS, TRUE);
+// constants that may be used for calibration of soil temperatures
+  count += readscalar(&HCOrg, "HCOrg", ParamFile, FALSE);
+  count += readscalar(&HCOrg, "HCOrg", DEFAULTS, TRUE);
+  count += readscalar(&HCMiner, "HCMiner", ParamFile, FALSE);
+  count += readscalar(&HCMiner, "HCMiner", DEFAULTS, TRUE);
+  count += readscalar(&CondOrg, "CondOrg", ParamFile, FALSE);
+  count += readscalar(&CondOrg, "CondOrg", DEFAULTS, TRUE);
+  count += readscalar(&CondMiner, "CondMiner", ParamFile, FALSE);
+  count += readscalar(&CondMiner, "CondMiner", DEFAULTS, TRUE);
+  count += readscalar(&CondSnow, "CondSnow", ParamFile, FALSE);
+  count += readscalar(&CondSnow, "CondSnow", DEFAULTS, TRUE);
 // hereafter all the stuff that may be defined in parameters file is read;
 // if not found in the parameters file a second attempt is made in the defaults file
   found = readscalar(&TStepHeat, "TStepHeat", ParamFile, FALSE);
@@ -910,6 +892,7 @@ int readall()                     // read all parameters
   count += found;
   found = readstring(SoilMoistureFile, "SoilMoisture", ParamFile, FALSE);
   if (!found) found = readstring(SoilMoistureFile, "SoilMoisture", DEFAULTS, TRUE);
+  count += found;
   len = 0;
   found = readarray(buf, &len, "ProfileOutput", ParamFile, FALSE);
   if (!found) found = readarray(buf, &len, "ProfileOutput", DEFAULTS, TRUE);

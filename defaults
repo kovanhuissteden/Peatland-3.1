@@ -46,7 +46,7 @@ ThermModel = 0;         % choice of soil thermal model:
                         % 1 for constant diffusivity
                         % 2 for constant temperature model
 
-% PHYSICAL CONSTANTS
+% PHYSICAL CONSTANTS that may vary
 
 DensOrg = 1200;                 % density organic matter in peat kg m-3
 DensMin = 2650;                 % density of mineral matter kg m-3
@@ -54,21 +54,12 @@ DensWater = 1000;               % density of water at 0 degr C
 DensIce = 917;                  % density of ice at 0 degr C
 HCOrg = 2.496e6;                % volumetric heat capacity organic matter J.m-3.K-1
 HCMiner = 2.385e6;              % volumetric heat capacity mineral matter
-HCAir = 1.212e3;                % volumetric heat capacity air (saturated with water vapour)
-HCWater = 4.18e6;               % volumetric heat capacity water
-HCIce = 1.9257e6;               % volumetric heat capacity ice
 CondOrg = 0.25;                 % thermal conductivity organic matter J.m-1.s-1.K-1 = W m-1 K-1
 CondMiner = 2.5;                % thermal conductivity mineral matter (this is for clay, use for sand 8.8 which is the conductivity for quartz)
-CondQuartz = 8.0;				% thermal conductivity quartz (for sand fraction)
-CondAir = 0.025;                % thermal conductivity air
-CondWater = 0.56;               % thermal conductivity water
-CondIce = 2.21;                 % thermal conductivity ice
-CondSnow = 0.35;                % thermal conductivity snowpack (density ~ 350 kg m-3, see Williams & Smith 1991, p. 110)
+% in case of pure quartz sand, this should be the same as quartz, but for clay minereals this is lower
+% (1.9 for illite, smectite; 2.6 for kaolinite, 3.3 for chlorite)
+CondSnow = 0.35;                % thermal conductivity snowpack (density ~ 350 kg m-3, but variable, see Williams & Smith 1991, p. 110)
 LatentHeat = [-0.0125, 1.955, 333.5];   % parameters for approximation of temperature-dependentlatent heat of fusion of ice J kg-1
-% LatentHeat = 334000;            % latent heat of fusion of ice J kg-1
-Rgas = 8.314;                   % Gas constant
-MethaneDiff = 1.7280;           % diffusivity of methane in air in m2/d
-MethaneDiffWater = 1.7280e-4;   % diffusion of methane in water
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DEFAULT PARAMETER SETTINGS

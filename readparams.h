@@ -111,29 +111,15 @@ extern char StartDate[];                // Start date DD/MM/YYYY
 extern char EndDate[];                  // End date DD/MM/YYYY
 extern int YEARdays;                    // Length of one year in days
 extern int NrOfYears;                   // Number of years in simulation  
-
 extern int ThermModel;                   // choice of soil thermal model:
 extern int WatertableModel;				 // choice for water table model: 0 = read from file, 1 = simple sinusoidal 2 = extended 'Yurova' type model
 extern double DensOrg;                   // density organic matter in peat (density of wood) kgm-3
 extern double DensMin;                   // density of mineral matter kg m-3
-extern double DensWater;                 // density of water at 0 degr C
-extern double DensIce;                   // density of ice at 0 degr C
 extern double HCOrg;                     // volumetric heat capacity organic matter J.m-3.K-1
 extern double HCMiner;                   // volumetric heat capacity mineral matter
-extern double HCAir;                     // volumetric heat capacity air (saturated with water vapour)
-extern double HCWater;                   // volumetric heat capacity water
-extern double HCIce;                     // volumetric heat capacity ice
 extern double CondOrg;                   // thermal conductivity organic matter J.m-1.s-1.K-1
 extern double CondMiner;                 // thermal conductivity mineral matter
-extern double CondAir;                   // thermal conductivity air
-extern double CondWater;                 // thermal conductivity water
-extern double CondIce;                   // thermal conductivity ice
 extern double CondSnow;                  // thermal conductivity snow
-extern double CondQuartz;                 // thermal conductivity quartz
-extern double Rgas;                      // Gas constant
-extern double MethaneDiff;               // diffusion of methane in air in m2/d
-extern double MethaneDiffWater;          // diffusion of methane in water
-
 extern double DissimAssimRatio;          // Assimiltion/Dissimilation ratio
 extern double ResistFrac;                // Fraction of decomposited organic material that is transferred to resistant humus fraction
 //extern double MolAct;                    // molecular activation energy aerobic organic matter decomposition
@@ -288,14 +274,14 @@ void cmdline(int argc, char *argv[]);
 argc and argv are the variables passed to main */
 
 
-int readstring(char x[], const char *ident, const char *filename, const int verbose);
+int readstring(char x[], const char *ident, const char *filename, const int check);
 /* reads a string parameter
     x       : variable to be read
     ident   : identification label in the file for the variable
     filename: the name of the file where x is stored
     verbose : prints warning messages if TRUE                       */
 
-int readscalar(double *x, const char *ident, const char *filename, const int verbose);
+int readscalar(double *x, const char *ident, const char *filename, const int check);
 /* reads a single value parameter
     x       : variable to be read
     ident   : identification label in the file for the variable
@@ -303,7 +289,7 @@ int readscalar(double *x, const char *ident, const char *filename, const int ver
     verbose : prints warning messages if TRUE                       */                        // reads a single value parameter
 
 
-int readarray(double *x, int *len, const char *ident, const char *filename, const int verbose);           // reads an array
+int readarray(double *x, int *len, const char *ident, const char *filename, const int check);           // reads an array
 /*  x       : variable to be read
     r       : number of rows
     c       : number of columns
@@ -311,7 +297,7 @@ int readarray(double *x, int *len, const char *ident, const char *filename, cons
     filename: the name of the file where x is stored                       */                 // reads an array
 
 
-int readmatrix(double *x, int *r, int *c, const char *ident, const char *filename, const int verbose);           // reads a matrix
+int readmatrix(double *x, int *r, int *c, const char *ident, const char *filename, const int check);           // reads a matrix
 /*  x       : variable to be read
     r       : number of rows
     c       : number of columns

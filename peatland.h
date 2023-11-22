@@ -87,22 +87,24 @@ Matrix HarvestData;
 double HarvestLitter = 0.1; // fraction of harvest that is left as litter at each harvest
 
 /***************************Physical properties*****************************/
-double DensOrg = 1430;                  // density organic matter in peat (density of wood) kgm-3
+double DensOrg = 1200;                  // density organic matter in peat kgm-3
 double DensMin = 2650;                  // density of mineral matter kg m-3
 double DensWater = 1000;                // density of water at 0 degr C
-double DensIce = 920;                   // density of ice at 0 degr C
-double HCOrg = 2.5e6;                   // volumetric heat capacity organic matter J.m-3.K-1
-double HCMiner = 2.0e6;                 // volumetric heat capacity mineral matter
-double HCAir = 1.2e3;                   // volumetric heat capacity air (saturated with water vapour)
-double HCWater = 4.2e6;                 // volumetric heat capacity water
+double DensIce = 917;                   // density of ice at 0 degr C
+double HCOrg = 2.496e6;                   // volumetric heat capacity organic matter J.m-3.K-1
+double HCMiner = 2.385e6;                 // volumetric heat capacity mineral matter
+double HCAir = 1.212e3;                   // volumetric heat capacity air (saturated with water vapour)
+double HCWater = 4.18e6;                 // volumetric heat capacity water
 double HCIce = 1.9257e6;                // volumetric heat capacity ice
 double CondOrg = 0.25;                  // thermal conductivity organic matter J.m-1.s-1.K-1
-double CondMiner = 2.5;                 // thermal conductivity mineral matter
+double CondMiner = 2.0;                 // thermal conductivity mineral matter W.m.K-1
+// in case of pure quartz sand, this should be the same as quartz, but for clay minereals this is lower
+// (1.9 for illite, smectite; 2.6 for kaolinite, 3.3 for chlorite)
 double CondQuartz = 8.8;                 // thermal conductivity quartz
 double CondAir = 0.025;                 // thermal conductivity air
-double CondWater = 0.57;                // thermal conductivity water
-double CondIce = 2.24;                  // thermal conductivity ice
-double CondSnow = 0.3;                  // thermal conductivity snow
+double CondWater = 0.56;                // thermal conductivity water
+double CondIce = 2.21;                  // thermal conductivity ice
+double CondSnow = 0.35;                  // thermal conductivity snow
 Matrix LatentHeat(3);		        // parameters for approximation of temperature-dependent latent heat of fusion of ice J kg-1
 double Rgas = 8.314;                    // Gas constant
 double MethaneDiff = 1.7280;            // diffusion of methane in air in m2/d
