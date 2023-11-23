@@ -18,7 +18,6 @@
 //#include "matrix.h"
 
 /************************ GLOBAL VARIABLES ***********************************/
-#define ERRORMSGK     "Negative peat decomposition rate, check CHrato and KPeatCN values"
 
 extern Matrix CorrFac;            // environmental correction factors for aerobic SOM decomposition constants k
 extern Matrix RootMass;           // initial root distribution (kg C/m2 in each layer)

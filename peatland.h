@@ -100,7 +100,7 @@ double CondOrg = 0.25;                  // thermal conductivity organic matter J
 double CondMiner = 2.0;                 // thermal conductivity mineral matter W.m.K-1
 // in case of pure quartz sand, this should be the same as quartz, but for clay minereals this is lower
 // (1.9 for illite, smectite; 2.6 for kaolinite, 3.3 for chlorite)
-double CondQuartz = 8.8;                 // thermal conductivity quartz
+double CondQuartz = 8.0;                 // thermal conductivity quartz
 double CondAir = 0.025;                 // thermal conductivity air
 double CondWater = 0.56;                // thermal conductivity water
 double CondIce = 2.21;                  // thermal conductivity ice

@@ -43,10 +43,10 @@ soil moisture and soil dryness corrections
 Priming correction                                                         */
 {
   int i, j, a;
-  double t, pHcorr, drynesscorr, wetnesscorr, hs, h, s, growfac, CNcorr;
+  double t, pHcorr, drynesscorr, wetnesscorr, hs, h, s, growfac, dtcorr, CNcorr;
   Matrix roots, priming, tcorr;
-
-  roots = RootMass / RootMass.Sum();              // initialize everything
+  // initialize everything
+  roots = RootMass / RootMass.Sum();
   priming.Resize(NrReservoirs);
   priming.Fill(1.0);
   tcorr.Resize(NrReservoirs);
@@ -54,15 +54,13 @@ Priming correction                                                         */
   for (i = 1; i <= NrLayers; i++)
   {
     a = (int)Layers(i,4); // a is reference to soil horizon
-    CNcorr = 1.0 + ((KPeatCN(1) - CNRatio(a)) * KPeatCN(2)) / Kdecay(1);   // correct k for CN based on empirical linear relation
-    if (CNcorr <= 0.0) //guard against negative values of k
-    {
-        cout << ERRORMSGK << endl;
-        exit(EXIT_FAILURE);
-    }
-    t = SoilTemp(i);
+    CNcorr = 1.0 + ((KPeatCN(1) - CNRatio(a)) * KPeatCN(2));   // correct k for CN based on empirical linear relation
+    if (CNRatio(a) < 10) {CNcorr = ((KPeatCN(1) - 10) * KPeatCN(2));}
+    if (CNRatio(a) > 55) {CNcorr = ((KPeatCN(1) - 55) * KPeatCN(2));}
+    t = SoilTemp(i);  // temperature correction
     if (Q10orArrhenius == 0) {
-        for (j = 1; j <= NrReservoirs; j++) tcorr(j) = pow(AerobicQ10(j), (t - T_ref) / 10.0); // temperature correction based on per reservoir specified Q10
+        for (j = 1; j <= NrReservoirs; j++) tcorr(j) = pow(AerobicQ10(j), (t - T_ref) / 10.0);
+            // temperature correction based on per reservoir specified Q10
     } else { //Arrhenius equation; Q10 is interpreted as molecular activation rate, specified per reservoir
         for (j = 1; j <= NrReservoirs; j++) tcorr(j) = exp((-AerobicQ10(j) / Rgas) * (1 / (t + 273.0) - 1 / (T_ref + 273.0)));
     }
@@ -91,9 +89,12 @@ Priming correction                                                         */
       priming(1) = 1.0 + roots(i) * PrimingCorrection * growfac * SpringFactor;  // correction for peat
       priming(NrReservoirs) =  priming(1);                                 // correction for humus
     }
-    CorrFac(i, 1) = CNcorr * priming(1) * tcorr(1) * pHcorr * drynesscorr * wetnesscorr; // for peat the decomposition rate is also corrected for C/N ratio
-    for (j = 2; j <= NrReservoirs; j++) CorrFac(i, j) = priming(j) * tcorr(j) * pHcorr * drynesscorr * wetnesscorr;
     // final calculation of environmental correction per reservoir and per layer
+    for (j = 1; j <= NrReservoirs; j++) {
+      // different calculation for peat reservoir, with CN correction
+      if (j == 1) CorrFac(i, j) = priming(j) * tcorr(j) * pHcorr * drynesscorr * wetnesscorr * CNcorr;
+      else CorrFac(i, j) = priming(j) * tcorr(j) * pHcorr * drynesscorr * wetnesscorr;
+    }
   }
 }   // end Envicor
 
@@ -103,7 +104,7 @@ void Decompose()
 
 {
   int i, j, n, m;
-  double h, unsatfraction, dt, transfermicrob, transferresist, soilT, anaertemperaturefact, ka, decomp, anaerobtotal = 0.0, aerobtotal = 0.0, litterTfact;
+  double h, unsatfraction, dt, transfermicrob, transferresist, soilT, anaertemperaturefact, ka, decomp, anaerobtotal = 0.0, aerobtotal = 0.0, tcorr = 2.0, litterTfact;
   Matrix k, aerob, anaerob, anaerobCO2, decomposedC;
 
   dt = Timestep / YEAR;                           // timestep in years
@@ -178,8 +179,9 @@ void Decompose()
             AnaerobSum(i) = anaerobCO2.SumRow(i); // sum over all reservoirs for layer total
         }
     } // end anaerobic CO2 calculation
-  }  
-  litterTfact = pow(2.0, ((TData(StepNr) - T_ref) / 10.0)); // temperature sensitivity of litter decomposition is fixed at Q10 = 2.0
+  }
+  if (Q10orArrhenius == 0) tcorr = AerobicQ10(5); // litter temperature decomposition correction
+  litterTfact = pow(tcorr, ((TData(StepNr) - T_ref) / 10.0)); // temperature sensitivity of litter decomposition is fixed at Q10 = 2.0
   ka = KLitter * litterTfact;
   LitterDecomp = LitterLayer - LitterLayer * (exp(- dt * ka));  // Decomposition of surface litter
   LitterLayer -= LitterDecomp; // decrease litter layer carbon

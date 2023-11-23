@@ -77,6 +77,7 @@ HalfSatPoint = 0.1;                             % half activity saturation point
 RootAeration = 0;                               % Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
 PrimingCorrection = 0;                          % Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
 Kdecay = [0.02 100 4 365 4 365 0.005];          % SOM decomposition constants for each reservoir
+Q10orArrhenius = 0;
 AerobicQ10 [3.5 2.0 2.0 2.0 3.0 2.0 4.0];       % Q10 values or molecular activation rates of aerobic decomposition separately for each reservoir
 AnaerobicCO2 = 1;                               % Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 KAnaerobic = [0.005 0.01 0.01 0.01 0.01 0.01 0.0001]; % Anaerobic decomposition constants, for all SOM reservoirs
