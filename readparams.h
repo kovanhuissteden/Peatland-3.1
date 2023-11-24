@@ -122,27 +122,24 @@ extern double CondMiner;                 // thermal conductivity mineral matter
 extern double CondSnow;                  // thermal conductivity snow
 extern double DissimAssimRatio;          // Assimiltion/Dissimilation ratio
 extern double ResistFrac;                // Fraction of decomposited organic material that is transferred to resistant humus fraction
-//extern double MolAct;                    // molecular activation energy aerobic organic matter decomposition
 extern Matrix Cfrac;                     // Carbon fraction (kg/kg) each SOM reservoir
 extern Matrix pFpoints;                  // Curve for determining environmental correction factor for dryness
 extern double HalfSatPoint;              // half activity saturation point for correction factor aeration
 extern double RootAeration;              // Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
 extern double PrimingCorrection;         // Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
 extern Matrix Kdecay;                    // SOM decomposition constants for each reservoir
-
 extern Matrix AerobicQ10;                // Q10 for each reservoir
 extern double AnaerobicDARatio;          // Assimiltion/Dissimilation ratio anaeroob
-
-extern Matrix KPeatCN;                   // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
+extern Matrix KPeatCN;                    //constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks.
+                                         // First number is the reference C/N value. Second is the slope of the relative decrease within the range of 10-55 C/N.
 extern double ShootsFactor;              // mass fraction root growth against shoot growth
 extern Matrix RespFac;                   // factor of primary production that is respirated during growth
 extern Matrix ProdTFunc;                 // determines temperature dependent production rate; 1st number is minimum, 2nd optimum
 extern double SatCorr;                   // correction of production for saturation of topsoil, depresses production at high saturation, switched off when 0
 extern double GrowFuncConst;             // proportionality constant growth functioen - primary productivity for plant transport in methane model
 extern double SpringCorrection;          // Correction (0-1) for stronger exudation in spring; influences priming and exudate production, if 0, disables spring correction; correction is a factor of 1+SpringCorrection
-
-extern double MaxProd;                   // Maximum primary productivity (kgC/m2/day)
-extern double MinProd;                   // Minimum primary productivity
+extern double MaxNPP;                   // Maximum primary productivity (kgC/m2/day)
+extern double MinNPP;                   // Minimum primary productivity (kgC/m2/day)
 extern double MaxRootDepth;              // Maximum root depth (m)
 extern int NoRootsBelowGWT;              // if 1, no roots will grow below groundwater table (No telmatophytes)
 extern double RootLambda;                // decay rate exponential root distribution function
@@ -151,6 +148,7 @@ extern double InitRoots;                 // Initial root mass in all layers
 //extern Matrix RootMass;                  // initial root distribution (kg C/m2 in each layer)
 extern double ExudateFactor;             // mass fraction of of below-ground production that consists of exudates
 extern double BioMass;                   // above ground biomass kg C /m2 (standing crop)
+extern double MinBiomass;                // minimum biomass, biomass will not drop below this minimum after harvest or during senescence stage
 extern double BioMassSenescence;         // biomass senescence at each DAY as fraction of above-ground biomass
 extern Matrix Harvest;                   // harvest dates (1st column) and fraction of biomass harvested (2nd column)
 extern Matrix Grazing;                   // Parts of the year in which garazing occurs, each row is a range of days
@@ -163,10 +161,8 @@ extern Matrix NPPData;                   // net primary production data from fil
 extern Matrix PARData;                   // photosynthetic active radiation or cloud cover data
 extern Matrix Precipitation;			 // Precipitation data (read from file)
 extern Matrix Evaporation;				 // Evaporation data (read from file)
-
 extern Matrix MethaneReservoirs;         // This parameter tells which reservoirs are summed for calculating methane production from easily decomposed
 extern double MethaneR0;                 // Methane production rate factor for fresh organic C microM/h
-
 extern double MethanepHCorr;             // for every PH unit lower or higher than neutral, MethanepHCorr*R0 is added to R0
 extern double MethaneQ10;                // Q10 value for temperature correction methane production; range 1.7 - 16 ref. in Walther & Heimann 2000
 extern double MethaneOxQ10;              // Q10 value for temperature correction methane oxidation; range 1.4 - 2.1, ref. in Walther & Heimann 2000
@@ -179,9 +175,7 @@ extern double MethaneAir;                // Methane concentration in the atmosph
 extern double MethaneTRef;               // Reference temperature for temperature sensitivity methane production
 extern double MethanePType;              // Vegetation type factor for gas transport by plants range: 0-15
 extern double MethanePlantOx;            // Fraction of methane that is oxidized during transport in plants
-
 extern double CO2CH4ratio;              // Molar ratio between CH4 and CO2 production; for acetate splitting this is 1, for CO2 reduction 0
-
 extern double PartialAnaerobe;           // Determines the slope of the relation of partial anaerobe soil fraction above the water table to soil saturation, >1
 extern double AnaerobeLagFactor;	     // Determines time lag for development of sufficiently anaerobic conditions after saturation of a layer
 extern Matrix InitMethane;               // Initial methane concentration profile
@@ -193,15 +187,16 @@ extern char PrecipFile[];             // file where the precipitation time serie
 extern char EvapFile[];               // file where the evaporation time series is stored; if empty the water table is assumed to be read from file
 extern char SoilMoistureFile[];  // file where soil moisture profile time series is stored; if empty the soil moisture will be calculated using very simplified assumptions
 extern Matrix MoistProfiles;             // Matrix with soil moisture profiles from observational data or other model
-
 extern double T_average;                 // average yearly temperature
 extern double T_amplitude;               // amplitude of temperature throughout the year
 extern double T_ref;                     // reference temperature for correction of decay constants
 extern double ThermDiff;                 // thermal diffusivity, if not defined it is estimated from soil properties
 extern char TFile[];                     // file with temperature time series
+extern char SoilTFile[];                 // file with soil temperature time series
 extern char SnowFile[];                  // file with snowdepth time series
 extern Matrix SnowData;                  // Snow depth data from file Snowfile
 extern Matrix TData;                     // Air temperature data from file Tfile
+extern Matrix SoilTData;                 // Soil temperature data from file SoilTFile
 extern Matrix GwData;                    // Groundwater table data from GWFile
 extern Matrix T_init;                    // Initial temperature profile
 extern char SoilProfile[];               // Name of the file where the soilprofile data are stored

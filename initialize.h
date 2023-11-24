@@ -86,6 +86,7 @@ extern double CondWater;                  // thermal conductivity water
 extern Matrix Porosity;                   // porosity of soil layers
 extern double ThermDiff;                  // thermal diffusivity, if not defined it is estimated from soil properties
 extern Matrix TData;                      // Air temperature data from file Tfile
+extern Matrix SoilTData;                  // Air temperature data from file SoilTFile
 extern Matrix GwData;                     // Groundwater table data from GWFile
 extern double T_average;                  // average yearly temperature
 extern double T_amplitude;                // amplitude of temperature throughout the year
@@ -113,10 +114,10 @@ extern double AnaerobicDARatio;          // Assimiltion/Dissimilation ratio anae
 extern double LitterLayer;              // organic matter stored in above ground litter layer, in kg C / m2
 extern double OldLitter;                 // For calculation of storage change of litter layer
 extern Matrix SplitRes;                   // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
-//extern Matrix KPeat;                      // Horizon-C/N dpendent peat decomposition rate
 extern Matrix CNRatio;                    // CN ratios for eac soil layer; the decomposition of peat can be made dependent on these
 extern Matrix Kdecay;                     // SOM decomposition constants for each reservoir
-//extern Matrix KPeatCN;                    // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
+extern Matrix KPeatCN;                    //constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks.
+                                          // First number is the reference C/N value. Second is the slope of the relative decrease within the range of 10-55 C/N.
 extern Matrix Layer_pH;                   // pH
 extern Matrix MethaneR0Corr;              // pH dependent methane production rate
 extern double MethaneR0;                  // Methane production rate factor for fresh organic C microM/h

@@ -83,54 +83,47 @@ void OrgProd()
 
   switch (ProductionModel)                                       // primary production modelled internally
   {
-        case 0: PrimProd = SimpleProd(); break;
-        case 1: PrimProd = TemperatureProd(); break; // soil temperature dependent prduction
-        case 2: PrimProd = PrimProd = NPPData(StepNr);  // primary production from imported data
-        case 3: PrimProd = RadProd(); break; // Haxeltine and Prentice model, PAR calculated from total daily radiation. 
-        case 4: PrimProd = TundraProd(); break; // Shaver photosynthesis model for tundra, PAR data supplied
+        case 0: NPP = SimpleProd(); break;
+        case 1: NPP = TemperatureProd(); break; // soil temperature dependent prduction
+        case 2: NPP = NPPData(StepNr);  // primary production from imported data
+        case 3: NPP = RadProd(); break; // Haxeltine and Prentice model, PAR calculated from total daily radiation.
+        case 4: NPP = TundraProd(); break; // Shaver photosynthesis model for tundra, PAR data supplied
   }
-  
-  // Plantrespiration including root respiration should be done first here as it contains corrections of PrimProd
-  
-  //if ((SatCorr > 0.0) && (Saturation(1) < SatCorr)) PrimProd = (Saturation(1) / SatCorr) * PrimProd; // dryness correction - to be moved to production model functions
-  
+
   /* Plant respiration:
    Respiration is linearly dependent on both primary production and total biomass, calculated in photoysnthesis models as kg CO2/m2
    total biomass has to be multiplied by the time step since the unit of the conversion factor is day-1 
    For production model 3 and 4, only the leaf respiration is calculated in the model, the root respiration
-   has to be added and PrimProd corrected for it 
+   has to be added and NPP corrected for it
    For productionmodel 5 and 6, total plantrespiration is included in the model*/
   f = Timestep * 3.6641;                                           // timestep and C - CO2 conversion factor
   if (ProductionModel < 3) {
       totalroots = RootMass.Sum();  // total root mass kg C
-      plantrespC = RespFac(1) * PrimProd / Timestep + RespFac(2) * (BioMass + totalroots);
-      PrimProd -= plantrespC;
-      if (PrimProd < 0.0) PrimProd = 0.0;
+      plantrespC = RespFac(1) * NPP / Timestep + RespFac(2) * (BioMass + totalroots);
+      NPP -= plantrespC;
+      if (NPP < 0.0) NPP = 0.0;
       PlantRespiration = f * plantrespC;
   }
     /* plant respiration for production model 3 and 4 is calculated as part of the photosynthesis module
      however, this differs between model 3 and 4; in 3, no root respiration is included
      units coming from photosynthesis model:  kg CO2 m2 per timestep */
   if (ProductionModel == 3) { // Model 3 has only plant respiration of above-ground biomass
-  //!!!!!!!!!!!!!!!!!!NB this has to be added to Merits code
       totalroots = RootMass.Sum();  // total root mass kg C
       rootresp = RespFac(2) * totalroots;
-      PrimProd -= rootresp;
-      if (PrimProd < 0.0) PrimProd = 0.0;
+      NPP -= rootresp;
+      if (NPP < 0.0) NPP = 0.0;
       PlantRespiration = PlantRespiration + f * rootresp;
   }
   CarbonBalance(StepNr, 15) = PlantRespiration * CONVKGCO2TOMOLC;
   if (ProfileOutput.Contains(8))
   {
-    result(2) = PrimProd;
+    result(2) = NPP;
     result(1) = Timer + 0.5 * Timestep;
     result.Write(output8);
   }
-  //if (LAIovershoot > 0.0) PrimProd = PrimProd - ShootsFactor * LAIovershoot;  // Correct primary production for overshoot of LAI
-  //cout << LAIovershoot << "  " << CurrentLAI << endl;
-  CarbonBalance(StepNr, 1) = (PrimProd + PlantRespiration) * CONVKGCTOMOLC;
-  TotalPrimProd += PrimProd;
-  Shoots = ShootsFactor * PrimProd;                              // shoots production
+  CarbonBalance(StepNr, 1) = (NPP + PlantRespiration) * CONVKGCTOMOLC;
+  TotalNPP += NPP;
+  Shoots = ShootsFactor * NPP;                              // shoots production
   overshoot = Shoots * LAIovershoot; // correction for overshooting max LAI by allocating more carbon to beloe-ground biomass
   Shoots = Shoots - overshoot; // decrease allocation to shoots if overshoot occurred
   gw = GwData(StepNr);                                           // partition roots according to root distribution function
@@ -151,7 +144,7 @@ void OrgProd()
       for (i = 1; i <= toproots; i++) rd(i) = RootDistrib(i) + RootDistrib(i) * belowgwt / abovegwt;
     } else rd(1) = 1.0; // water table above the profile, all roots added to top of profile
   } else rd = RootDistrib;
-  rd *= (1.0 - ShootsFactor) * PrimProd;                            // calculates the amount of roots added per layer
+  rd *= (1.0 - ShootsFactor) * NPP;                            // calculates the amount of roots added per layer
   rd = rd + overshoot; // additional allocation to belowground biomass if production overshoots max LAI
   SpringFactor = 1 + SpringCorrection * sin(2 * PI * (DayNr + 284) / 365);  // spring factor to account for enhanced exudate production during active growing season
   exudates = rd * (SpringFactor * ExudateFactor);                 // exudates, are a fraction of the new root material added
@@ -194,15 +187,10 @@ void OrgProd()
           }
       } else f_senescence = 0;
       BioMass = (1 - f_senescence) * BioMass;
-      //if (CurrentLAI < minLAI) CurrentLAI = minLAI; replaced by these  2 lines from Merit
-      //litter = f_senescence * BioMass;
       if ((HDcount == 22) && (CurrentLAI < minLAI)) cout << StepNr << " LAI is not recovering to minimum LAI after harvest" << endl;
       if (((HDcount > 21) || ((HDcount > 7) && (autumn == TRUE))) && (CurrentLAI < minLAI)) CurrentLAI = minLAI;
   }
-  /*if ((BioMass - litter) <= minBiomass) {  // litter should not be more than remaining minimum biomass
-      litter = BioMass - minBiomass;
-      BioMass = minBiomass;
-      cout << PRODUCTION_ERROR2 << endl;*/
+
   if (BioMass <= minBiomass){
     BioMass = minBiomass;
     CurrentLAI = minLAI;
@@ -221,7 +209,7 @@ void OrgProd()
 
   BioMassRec(StepNr, 1) = DayNr;
   BioMassRec(StepNr, 2) = BioMass + totalroots;                     // log total biomass, kg C m-2
-  BioMassRec(StepNr, 3) = PrimProd;    //  primary production kg C m-2 timestep-1
+  BioMassRec(StepNr, 3) = NPP;    //  primary production kg C m-2 timestep-1
   BioMassRec(StepNr, 4) = PlantRespiration; // kg CO2 m-2 timestep-1
   // litter is stored after litter decomposition in CollectCO2
   BioMassRec(StepNr, 8) = HarvestGrazing;
@@ -320,7 +308,7 @@ double SimpleProd()
 /* Simple primary production from yearly sinusoidal function */
 {
   double a;
-  a = Timestep *((MaxProd-MinProd) * (0.5 + 0.5 * sin(2 * PI * (DayNr + 284) / YEAR)) + MinProd);
+  a = Timestep *((MaxNPP-MinNPP) * (0.5 + 0.5 * sin(2 * PI * (DayNr + 284) / YEAR)) + MinNPP);
   return a;
 }
 
@@ -335,7 +323,7 @@ double TemperatureProd()
   {
     tfac = 0.5 * (sin (PI * (T - ProdTFunc(1)) / (ProdTFunc(2) - ProdTFunc(1)) - 0.5 * PI) + 1);
   } else tfac = 0;
-  a = Timestep * (MinProd + tfac * (MaxProd - MinProd));
+  a = Timestep * (MinNPP + tfac * (MaxNPP - MinNPP));
 
   return a;
 }
@@ -582,7 +570,7 @@ double LAICalc()
             }
             if (GrowingDegreeDays > maxGDD) PotentialLAI = maxLAI; else PotentialLAI = minLAI + (maxLAI - minLAI) * GrowingDegreeDays / Phenology(3);
             // potential LAI can decrease in autumn, so does LAI
-            kgCadded = PrimProd * ShootsFactor;
+            kgCadded = NPP * ShootsFactor;
             // adapte by using the GreenBiomassRatio, the ratio over photosynthesizing biomass over total bomass
             PotLAIadded = GreenBiomassRatio * kgCadded / LAICarbonFraction; //LAI added according to primary production and GreenBiomassRatio
 // Bug correction: previous coude allowed to exceed the maximum LAI strongly, which causes errors in the methane model.

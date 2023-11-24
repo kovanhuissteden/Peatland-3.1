@@ -140,11 +140,11 @@ void InitHeat()
   double theta_sat, theta_wilt, f0, t, d, w;
   Matrix tp1, tp2, lm1;
 
-  SoilTemp.Resize(NrLayers);                            // Soil temperature array for easy use in other functions, wil be updated by heat functions
-  if (ThermModel == 2) return;                          // skip the rest if soil temperatures are taken from file
-  if (ThermModel == 0)									// recompute average temperature and amplitude from data
-  {														// the average temperature is the lower boundary condition of the temperature solutution
-   T_amplitude = TData.Max() - TData.Min();
+  SoilTemp.Resize(NrLayers);  // Soil temperature array for easy use in other functions, wil be updated by heat functions
+  if (ThermModel == 2) return; // skip the rest if soil temperatures are taken from file
+  if (ThermModel == 0) // recompute average temperature and amplitude from data
+  { // the average temperature is the lower boundary condition of the temperature solutution
+      T_amplitude = SoilTData.Max() - SoilTData.Min();
   }
   ThermDiffVar.Resize(NrLayers);                        // thermal diffusivity
   Freeze.Resize(NrLayers, 3);                           // Freezing fumction parameters

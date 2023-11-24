@@ -83,7 +83,7 @@ Priming correction                                                         */
     if (s < h) wetnesscorr = s / h; else wetnesscorr = 1.0;  // correction depends linear on saturation
     // priming effect root exudates on slow C reservoirs (peat and humus)
     // depends on root density, relative growth rate of the vegation (more exudation at high rate), and springtime
-    growfac = (PrimProd / Timestep - MinProd) / (MaxProd - MinProd);    // growfac: the relative growth rate of the vegetation
+    growfac = (NPP / Timestep - MinNPP) / (MaxNPP - MinNPP);    // growfac: the relative growth rate of the vegetation
     if (PrimingCorrection > 0)                             // priming correction based on growth rate, root density and time of the year (in spring very active exudation)
     {
       priming(1) = 1.0 + roots(i) * PrimingCorrection * growfac * SpringFactor;  // correction for peat

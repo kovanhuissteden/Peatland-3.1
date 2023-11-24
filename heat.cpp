@@ -139,9 +139,9 @@ void Temperature()
 {
   switch (ThermModel)
   {
-    case 0: {HeatVar((int)(Timestep/TStepHeat), TData(StepNr)); break;}             // temperature layer-dependent thermal properties
-    case 1: {HeatSimple((StepNr - 0.5) * Timestep ); break;}                        // temperature profile simple sinusoidal model
-    case 2: SoilTemp = TData.Row(StepNr);                                           // temperature from observational data
+    case 0: {HeatVar((int)(Timestep/TStepHeat), SoilTData(StepNr)); break;} // temperature layer-dependent thermal properties
+    case 1: {HeatSimple((StepNr - 0.5) * Timestep ); break;}                // temperature profile simple sinusoidal model
+    case 2: SoilTemp = SoilTData.Row(StepNr);                               // temperature from observational data
   }
   if (ProfileOutput.Contains(1)) SoilTemp.Write(output1);                           // write to output file if requested
   if (ProfileOutput.Contains(6)) Ice.Write(output6);                                // write ice content to output

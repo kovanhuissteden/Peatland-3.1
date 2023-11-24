@@ -30,6 +30,7 @@
 
 /************************ GLOBAL VARIABLES ***********************************/
 
+extern BOOLEAN Verbose;
 extern Matrix MethaneFlux;              // Methane flux at surface;  1st value: ebullition flux; 2nd: plant mediated flux; 3d:diffusive flux
 extern Matrix Layers;                   // Layer boundaries
 extern int NrLayers;                    // Number of depth steps
@@ -50,9 +51,9 @@ extern double MethaneMaxConc;           // maximum methane concentration in pore
 extern double MethaneERateC;            // Ebullition rate constant (1/hr)
 extern double CurrentGW;                // Current water table during time step
 extern Matrix MethaneFlux;              // Methane flux at surface;  1st value: ebullition flux; 2nd: plant mediated flux; 3d:diffusive flux
-extern double MaxProd;                  // Maximum primary productivity (kgC/m2/day)
+extern double MaxNPP;                   // Maximum primary productivity (kgC/m2/day)
 extern double GrowFuncConst;            // proportionality constant growth functioen - primary productivity for plant transport in methane model
-extern double PrimProd;                 // Primary production per time step
+extern double NPP;                      // Primary production per time step
 extern double MethanePRateC;            // Rate constant for plant transport of methane (1/hr)
 extern double MethanePType;             // Vegetation type factor for gas transport by plants range: 0-15
 extern double MethanePlantOx;           // Fraction of methane that is oxidized during transport in plants
@@ -86,7 +87,7 @@ extern Matrix DBD;                      // Dry bulk density for each horizon
 extern Matrix Ice;                      // Ice content (kg ice / kg dry soil)
 extern int ProductionModel;                  // Production model: 0 for simple sinusoidal function; 1 for production dependent on temperature of upper soil layer
 extern double CurrentLAI;               // leaf area index
-extern double MinProd;                   // Minimum primary productivity
+extern double MinNPP;                   // Minimum primary productivity
 extern Matrix TData;                      // Air temperature data from file Tfile
 extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
 

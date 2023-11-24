@@ -23,19 +23,19 @@
 extern BOOLEAN Verbose;
 extern double DayOfTheYear;                  // Julian day number of the midpoint of the simulated time step relative to the current year;
 extern int ProductionModel;                  // Production model: 0 for simple sinusoidal function; 1 for production dependent on temperature of upper soil layer
-extern double MaxProd;                       // Maximum primary productivity (kgC/m2/day)
-extern double MinProd;                       // Minimum primary productivity
+extern double MaxNPP;                       // Maximum primary productivity (kgC/m2/day)
+extern double MinNPP;                       // Minimum primary productivity
 extern double Timestep;                      // model timestep
 extern double Timer;                      // starting point of simulated time step
 extern double DayNr;                         // midpoint of simulated timestep, relative to day 1 of the year in which the simulation started
 extern int StepNr;                           // time step number during iteration
 extern Matrix ProdTFunc;                     // determines temperature dependent production rate; 1st number is minimum, 2nd optimum
 extern Matrix SoilTemp;                      // soil temperatures model layers, interpolated from TProfile
-extern double PrimProd;                      // Primary production per time step
+extern double NPP;                      // Primary production per time step
 extern double SpringCorrection;              // Correction (0-1) for stronger exudation in spring; influences priming and exudate production, if 0, disables spring correction; correction is a factor of 1+SpringCorrection
 extern double SatCorr;                       // correction of production for saturation of topsoil, depresses production at high saturation, switched off when 0
 extern Matrix Saturation;                    // pore volume saturation with water
-extern double TotalPrimProd;                 // total primary production
+extern double TotalNPP;                 // total primary production
 extern double Shoots;                        // Shoot production per time step
 extern double ShootsFactor;                  // mass fraction root growth against shoot growth
 extern Matrix RootDistrib;                   // root distribution function
@@ -52,6 +52,7 @@ extern ofstream *output4;                    // output file rootmass
 extern Matrix NewSOM;                        // SOM reservoirs to be changed in each iteration step
 extern Matrix ProfileOutput;                 // determines which vertical profiles are sent to log files
 extern double BioMass;                       // above ground biomass kg C /m2 (standing crop)
+extern double MinBiomass;                // minimum biomass, biomass will not drop below this minimum after harvest or during senescence stage
 extern Matrix Harvest;                       // harvest dates (1st column) and fraction of biomass harvested (2nd column)
 extern int HarvestModel;                     // 1 = harvest amount/dates same every year. 2 = harvest amounts/dates defined in input file per year.
 extern Matrix HarvestCorrection;            // Correction of GPP after harvest with reduction factor directly after harvest (first) and period of recovery in days (second)

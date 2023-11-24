@@ -21,6 +21,7 @@
 
 extern double TStepHeat;                 // time step (days) temperature model
 extern double DStepHeat;                 // minimum depth step (m) temperature model
+extern Matrix SoilTData;                  // soil temperature data
 extern double MaxDepthHeat;              // maximum depth temperature model (m)
 extern int NrHeatLayers;                 // number of layers temperature model
 extern Matrix Saturation;                // pore volume saturation with water

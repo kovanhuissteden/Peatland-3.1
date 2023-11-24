@@ -35,10 +35,10 @@ extern Matrix MatricPotential;    // matric potential of model soil layer
 extern double HalfSatPoint;       // half activity saturation point for correction factor aeration
 extern double RootAeration;       // Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
 extern int NrReservoirs;          // Number of SOM reservoirs
-extern double MaxProd;            // Maximum primary productivity (kgC/m2/day)
-extern double MinProd;            // Minimum primary productivity
+extern double MaxNPP;             // Maximum primary productivity (kgC/m2/day)
+extern double MinNPP;             // Minimum primary productivity
 extern double PrimingCorrection;  // Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
-extern double PrimProd;           // Primary production per time step
+extern double NPP;                // Primary production per time step
 extern double Timestep;           // model timestep
 extern double SpringFactor;       // instantaneous value of spring correction, declared global for use by environmental correction SOM decomposition for priming effect
 extern Matrix Kdecay;             // SOM decomposition constants for each reservoir

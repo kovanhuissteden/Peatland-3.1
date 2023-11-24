@@ -261,7 +261,7 @@ void planttrans(double &flux, Matrix &CH4oxidation, Matrix &CO2production, Matri
 
     rate.Fill(0.0);
     if (ProductionModel < 3) { 
-        if (MaxProd > 0) fgrow = GrowFuncConst * (PrimProd / Timestep) / MaxProd;  else fgrow = 0.0;  // growth function for plant transport - in the Walter Heimann model LAI is used but this is not available with the simple production models, therefore fgrow is scaled according to primary production
+        if (MaxNPP > 0) fgrow = GrowFuncConst * (NPP / Timestep) / MaxNPP;  else fgrow = 0.0;  // growth function for plant transport - in the Walter Heimann model LAI is used but this is not available with the simple production models, therefore fgrow is scaled according to primary production
     } else { // in the original Walter-Heimann model, fgrow is determined by LAI
         fgrow = GrowFuncConst * CurrentLAI;
         if ((fgrow == 0.0) && (SoilTemp(1) > 0.0)) fgrow = GrowFuncConst * minLAI; // this allows for a minimum flux when LAI is zero and upper soil layer is not frozen

@@ -461,9 +461,7 @@ int readall()                     // read all parameters
 {
   double x;
   double *buf;
-  int count = 0, found = FALSE, len, r, c, maxpar = 109;
-
-
+  int count = 0, found = FALSE, len, r, c, maxpar = 114;
 
   buf = new double[10000];
   if (buf == NULL)
@@ -514,12 +512,23 @@ int readall()                     // read all parameters
   if (!found) found = readscalar(&x, "ProductionModel", DEFAULTS, TRUE);
   count += found;
   ProductionModel = (int)x;
-  if (ProductionModel > 1) maxpar += 1;   // adapt number of parameters to be read depending on productionmodel
+  if (ProductionModel == 2)
+  {
+      maxpar += 1;
+      found = readstring(NPPFile, "NPPFile", ParamFile, FALSE);
+      if (!found) found = readstring(NPPFile, "NPPFile", DEFAULTS, TRUE);
+      count += found;
+  }
   if (ProductionModel > 2)
   {
-      maxpar += 4;
-      found = readscalar(&AmbientCO2, "AmbientCO2", ParamFile, FALSE);
-      if (!found) found = readscalar(&AmbientCO2, "AmbientCO2", DEFAULTS, TRUE);
+      maxpar += 6;
+      found = readstring(RADFile, "RADFile", ParamFile, FALSE);
+      if (!found) found = readstring(RADFile, "RADFile", DEFAULTS, TRUE);
+      count += found;
+      found = readscalar(&x, "RADunits", ParamFile, FALSE);
+      if (!found) found = readscalar(&x, "RADunits", DEFAULTS, TRUE);
+      count += found;
+      RADunits = (int)x;
       len = 8;
       found = readarray(Phenology.Data(), &len, "Phenology", ParamFile, FALSE);
       if (!found) found = readarray(Phenology.Data(), &len, "Phenology", DEFAULTS, TRUE);
@@ -533,10 +542,13 @@ int readall()                     // read all parameters
       found = readscalar(&LAICarbonFraction, "LAICarbonFraction", ParamFile, FALSE);
       if (!found) found = readscalar(&LAICarbonFraction, "LAICarbonFraction", DEFAULTS, TRUE);
       count += found;
-      found = readscalar(&x, "RADunits", ParamFile, FALSE);
-      if (!found) found = readscalar(&x, "RADunits", DEFAULTS, TRUE);
+  }
+  if (ProductionModel == 3)
+  {
+      maxpar += 1;
+      found = readscalar(&AmbientCO2, "AmbientCO2", ParamFile, FALSE);
+      if (!found) found = readscalar(&AmbientCO2, "AmbientCO2", DEFAULTS, TRUE);
       count += found;
-      RADunits = (int)x;
   }
   if (ProductionModel == 4)
   {
@@ -559,38 +571,31 @@ int readall()                     // read all parameters
   if (!found) found = readscalar(&x, "StartYear", DEFAULTS, TRUE);
   StartYear = x;
   count += found;
-
   found = readscalar(&x, "StartDay", ParamFile, FALSE);
   if (!found) found = readscalar(&x, "StartDay", DEFAULTS, TRUE);
   StartDay = (int)x;
   count += found;
-
   found = readscalar(&DissimAssimRatio, "DissimAssimRatio", ParamFile, FALSE);
   if (!found) found = readscalar(&DissimAssimRatio, "DissimAssimRatio", DEFAULTS, TRUE);
   count += found;
-    found = readscalar(&AnaerobicDARatio, "AnaerobicDARatio", ParamFile, FALSE);
+  found = readscalar(&AnaerobicDARatio, "AnaerobicDARatio", ParamFile, FALSE);
   if (!found) found = readscalar(&AnaerobicDARatio, "AnaerobicDARatio", DEFAULTS, TRUE);
-
+  count += found;
   found = readstring(StartDate, "StartDate", ParamFile, FALSE);
   if (!found) found = readstring(StartDate, "StartDate", DEFAULTS, TRUE);
   count += found;
-
   found = readstring(EndDate, "EndDate", ParamFile, FALSE);
   if (!found) found = readstring(EndDate, "EndDate", DEFAULTS, TRUE);
   count += found; 
-
   if ( (Timestep == 1.0) && (Assign_Start(StartDate)) && (Assign_end(EndDate))) 
   {
     NrOfSteps = count_days(StartDay, StartMonth, StartYear, EndDay, EndMonth, EndYear);
   }
-
   if (!NrOfSteps) cout << "Simulation duration could not be calculated. Default assumed." << endl;
   if (Verbose) cout << "Total number of model timesteps (days): " << NrOfSteps << endl;
-
   found = readscalar(&ResistFrac, "ResistFrac", ParamFile, FALSE);
   if (!found) found = readscalar(&ResistFrac, "ResistFrac", DEFAULTS, TRUE);
   count += found;
-
   found = readscalar(&KLitter, "KLitter", ParamFile, FALSE);
   if (!found) found = readscalar(&KLitter, "KLitter", DEFAULTS, TRUE);
   count += found;
@@ -616,14 +621,9 @@ int readall()                     // read all parameters
   found = readarray(Kdecay.Data(), &len, "Kdecay", ParamFile, FALSE);
   if (!found) found = readarray(Kdecay.Data(), &len, "Kdecay", DEFAULTS, TRUE);
   count += found;
-
   len = 7;
   found = readarray(AerobicQ10.Data(), &len, "AerobicQ10", ParamFile, FALSE);
   if (!found) found = readarray(AerobicQ10.Data(), &len, "AerobicQ10", DEFAULTS, TRUE);
-  count += found;
-  len = 2;
-  found = readarray(KPeatCN.Data(), &len, "KPeatCN", ParamFile, FALSE);
-  if (!found) found = readarray(KPeatCN.Data(), &len, "KPeatCN", DEFAULTS, TRUE);
   count += found;
   found = readscalar(&ShootsFactor, "ShootsFactor", ParamFile, FALSE);
   if (!found) found = readscalar(&ShootsFactor, "ShootsFactor", DEFAULTS, TRUE);
@@ -639,17 +639,21 @@ int readall()                     // read all parameters
   found = readscalar(&SatCorr, "SatCorr", ParamFile, FALSE);
   if (!found) found = readscalar(&SatCorr, "SatCorr", DEFAULTS, TRUE);
   count += found;
+  len = 2;
+  found = readarray(KPeatCN.Data(), &len, "KPeatCN", ParamFile, FALSE);
+  if (!found) found = readarray(KPeatCN.Data(), &len, "KPeatCN", DEFAULTS, TRUE);
+  count += found;
   found = readscalar(&GrowFuncConst, "GrowFuncConst", ParamFile, FALSE);
   if (!found) found = readscalar(&GrowFuncConst, "GrowFuncConst", DEFAULTS, TRUE);
   count += found;
   found = readscalar(&SpringCorrection, "SpringCorrection", ParamFile, FALSE);
   if (!found) found = readscalar(&SpringCorrection, "SpringCorrection", DEFAULTS, TRUE);
   count += found;
-  found = readscalar(&MaxProd, "MaxProd", ParamFile, FALSE);
-  if (!found) found = readscalar(&MaxProd, "MaxProd", DEFAULTS, TRUE);
+  found = readscalar(&MaxNPP, "MaxNPP", ParamFile, FALSE);
+  if (!found) found = readscalar(&MaxNPP, "MaxNPP", DEFAULTS, TRUE);
   count += found;
-  found = readscalar(&MinProd, "MinProd", ParamFile, FALSE);
-  if (!found) found = readscalar(&MinProd, "MinProd", DEFAULTS, TRUE);
+  found = readscalar(&MinNPP, "MinNPP", ParamFile, FALSE);
+  if (!found) found = readscalar(&MinNPP, "MinNPP", DEFAULTS, TRUE);
   count += found;
   found = readscalar(&MaxRootDepth, "MaxRootDepth", ParamFile, FALSE);
   if (!found) found = readscalar(&MaxRootDepth, "MaxRootDepth", DEFAULTS, TRUE);
@@ -673,6 +677,9 @@ int readall()                     // read all parameters
   found = readscalar(&BioMass, "BioMass", ParamFile, FALSE);
   if (!found) found = readscalar(&BioMass, "BioMass", DEFAULTS, TRUE);
   count += found;
+  found = readscalar(&MinBiomass, "MinBiomass", ParamFile, FALSE);
+  if (!found) found = readscalar(&MinBiomass, "MinBiomass", DEFAULTS, TRUE);
+  count += found;
   found = readscalar(&BioMassSenescence, "BioMassSenescence", ParamFile, FALSE);
   if (!found) found = readscalar(&BioMassSenescence, "BioMassSenescence", DEFAULTS, TRUE);
   count += found;
@@ -680,14 +687,14 @@ int readall()                     // read all parameters
   found = readarray(HarvestCorrection.Data(), &len, "HarvestCorrection", ParamFile, FALSE);
   if (!found) found = readarray(HarvestCorrection.Data(), &len, "HarvestCorrection", DEFAULTS, TRUE);
   count += found;
+  found = readstring(HarvestFile, "HarvestFile", ParamFile, FALSE);
+  if (!found) found = readstring(HarvestFile, "HarvestFile", DEFAULTS, TRUE);
+  count += found;
   r = 0;
   c = 2;
   found = readmatrix(buf, &r, &c, "Harvest", ParamFile, FALSE);
   if (!found) found = readmatrix(buf, &r, &c, "Harvest", DEFAULTS, TRUE);
   Harvest.Resize(r, c, buf);
-  count += found;
-  found = readstring(HarvestFile, "HarvestFile", ParamFile, FALSE);
-  if (!found) found = readstring(HarvestFile, "HarvestFile", DEFAULTS, TRUE);
   count += found;
   found = readscalar(&HarvestLitter, "HarvestLitter", ParamFile, FALSE);
   if (!found) found = readscalar(&HarvestLitter, "HarvestLitter", DEFAULTS, TRUE);
@@ -838,6 +845,7 @@ int readall()                     // read all parameters
   count += found;
   found = readscalar(&ThermDiff, "ThermDiff", ParamFile, FALSE);          // thermal diffusion needs not be defined
   if (!found) found = readscalar(&ThermDiff, "ThermDiff", DEFAULTS, TRUE);
+  count += found;
   r = 2;
   c = 0;
   found = readmatrix(buf, &r, &c, "T_init", ParamFile, FALSE);
@@ -846,20 +854,13 @@ int readall()                     // read all parameters
   if (c > 0) count += found;
   found = readstring(TFile, "TFile", ParamFile, FALSE);
   if (!found) found = readstring(TFile, "TFile", DEFAULTS, TRUE);
+  count += found;
+  found = readstring(SoilTFile, "SoilTFile", ParamFile, FALSE);
+  if (!found) found = readstring(SoilTFile, "SoilTFile", DEFAULTS, TRUE);
+  count += found;
   found = readstring(SnowFile, "SnowFile", ParamFile, FALSE);
   if (!found) found = readstring(SnowFile, "SnowFile", DEFAULTS, TRUE);
-  if (ProductionModel == 2)
-  {
-      found = readstring(NPPFile, "NPPFile", ParamFile, FALSE);
-      if (!found) found = readstring(NPPFile, "NPPFile", DEFAULTS, TRUE);
-      count += found;
-  }
-  if (ProductionModel > 2)
-  {  
-      found = readstring(RADFile, "RADFile", ParamFile, FALSE);
-      if (!found) found = readstring(RADFile, "RADFile", DEFAULTS, TRUE);
-      count += found;
-  }
+  count += found;
   found = readstring(CO2File, "CO2File", ParamFile, FALSE);
   if (!found) found = readstring(CO2File, "CO2File", DEFAULTS, TRUE);
   count += found;
@@ -890,8 +891,8 @@ int readall()                     // read all parameters
   found = readstring(SoilProfile, "SoilProfile", ParamFile, FALSE);
   if (!found) found = readstring(SoilProfile, "SoilProfile", DEFAULTS, TRUE);
   count += found;
-  found = readstring(SoilMoistureFile, "SoilMoisture", ParamFile, FALSE);
-  if (!found) found = readstring(SoilMoistureFile, "SoilMoisture", DEFAULTS, TRUE);
+  found = readstring(SoilMoistureFile, "SoilMoistureFile", ParamFile, FALSE);
+  if (!found) found = readstring(SoilMoistureFile, "SoilMoistureFile", DEFAULTS, TRUE);
   count += found;
   len = 0;
   found = readarray(buf, &len, "ProfileOutput", ParamFile, FALSE);
@@ -965,7 +966,8 @@ int readsoil(char *soilname)          // reads soil profile from the file specif
   }
   len = NrHorizons;
   if (readarray(buf, &len, "Porosity", soilname, FALSE)) Porosity.Resize(len, buf);
-  if ((ThermModel == 0) && (strlen(TFile) != 0))            // read temperature time series
+
+  if ((ThermModel == 0) && (strlen(TFile) != 0))    // read air temperature time series
   {
     TData.Resize(NrOfSteps);
     if (readTseries(TData.Data(), TFile, NrOfSteps, 1) < NrOfSteps)
@@ -974,7 +976,23 @@ int readsoil(char *soilname)          // reads soil profile from the file specif
     } else
     {
       if (Verbose) cout << "Taking temperature data from file: " << TFile <<"\n";
+      // if no soil temp data supplied, use air temp
+      if (strlen(SoilTFile) == 0) SoilTData = TData;
     }
+  }
+  if ((ThermModel == 0) && (strlen(SoilTFile) != 0))
+  // read (surface) soil temperature time series
+  {
+      SoilTData.Resize(NrOfSteps);
+      if (readTseries(SoilTData.Data(), SoilTFile, NrOfSteps, 1) < NrOfSteps)
+      {
+          cout << ERRORMSG9 << SoilTFile << " Soil (surface) temperature time series" << endl;
+      } else
+      {
+          if (Verbose) cout << "Taking soil temperature data from file: " << SoilTFile <<"\n";
+          if (strlen(TFile) == 0) TData = SoilTData;
+          // if no air temp data supplied, use soil temp
+      }
   }
   if ((ThermModel == 0) && (strlen(SnowFile) != 0))            // read snowdepth time series
   {

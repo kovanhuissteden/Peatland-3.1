@@ -71,7 +71,6 @@ int YEARdays = 365;                     // Length of one year in days
 int NrOfYears;                                  // Number of years in simulation
 int monthdays;                       // Number of days in the current month.
 
-
 // HARVEST VARIABLES
 double Harv_height = 0.2;//harvest/mowing height [m]
 char HDate[256] = "";               // Harvest date
@@ -111,13 +110,9 @@ double MethaneDiff = 1.7280;            // diffusion of methane in air in m2/d
 double MethaneDiffWater = 1.7280e-4;    // diffusion of methane in water
 
 /***************************Aerobic SOM decomposition*************************/
-
 double DissimAssimRatio = 2.3;          // Assimiltion/Dissimilation ratio aeroob
 double AnaerobicDARatio =30.0;      // Assimiltion/Dissimilation ratio anaeroob
 double ResistFrac = 0.1;                // Fraction of decomposited organic material that is transferred to resistant humus fraction
-//double MolAct = 74826;                  // molecular activation energy aerobic organic matter decomposition
-//!!!!!!!!!!!!!!!!!!! obsolete; will be replaced by Q10 for each OM reservoir
-
 Matrix Cfrac(7);                        // Carbon fraction (kg/kg) each SOM reservoir
 Matrix pFpoints(2,2);                   // Curve for determining environmental correction factor for dryness
 double HalfSatPoint = 0.1;              // half activity saturation point for correction factor aeration
@@ -125,9 +120,7 @@ double RootAeration = 0;                // Root mass dependent correction (0 - 1
 double PrimingCorrection = 0;           // Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
 Matrix Kdecay(7);                       // SOM decomposition constants for each reservoir
 Matrix AerobicQ10(7);                   // Q10 or Arrhenius molecular activation rate for each reservoir
-Matrix KPeatCN(2);                      // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks
 Matrix SplitRes;                        // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
-//Matrix KPeat;                           // Horizon-C/N dpendent peat decomposition rate
 int Q10orArrhenius = 0;                 //Switch between temperature correction of (an)aerobic decomposition as Q10 (0) or Arrhenius (1) equation
 int AnaerobicCO2 = 0;                   // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 Matrix KAnaerobic(7);                   // Anaerobic decomposition constants, for all SOM reservoirs
@@ -135,6 +128,8 @@ Matrix LayerAnaerobic;                  // Anaerobic CO2 per layer
 Matrix AnaerobSum;                      // sum of anaerobic CO2 per layer
 double Q10Anaerobic = 3.5;              // Q10 or Arrhenius Molecular activation rate of anaerobic decomposition
 double KLitter = 0.5;                   // decomposition constant above-ground litter and standing dead biomass
+Matrix KPeatCN(2);                      // constants linear relation of decomposition rate k of peat with CN ratio cf Vermeulen & Hendriks.
+                                        // First number is the reference C/N value. Second is the slope of the relative decrease within the range of 10-55 C/N.
 
 /***************************SOM production***********************************/
 int ProductionModel = 0;                // Production model:
@@ -165,8 +160,8 @@ Matrix ProdTFunc(2);                    // determines temperature dependent prod
 double SatCorr = 0.0;                   // correction of production for saturation of topsoil, depresses production at high saturation, switched off when 0
 double GrowFuncConst = 1.0;               // proportionality constant growth functioen - primary productivity for plant transport in methane model
 double SpringCorrection = 0;            // Correction (0-1) for stronger exudation in spring; influences priming and exudate production, if 0, disables spring correction; correction is a factor of 1+SpringCorrection
-double MaxProd = 0.0057;                // Maximum primary productivity (kgC/m2/day)
-double MinProd = 0.0;                   // Minimum primary productivity
+double MaxNPP = 0.0057;                 // Maximum primary productivity (kgC/m2/day)
+double MinNPP = 0.0;                    // Minimum primary productivity
 double MaxRootDepth = 0.3;              // Maximum root depth (m)
 int NoRootsBelowGWT = 1;                // if 1, no roots will grow below groundwater table (No telmatophytes)
 double RootLambda = 20;                 // decay rate exponential root distribution function
@@ -175,6 +170,7 @@ double InitRoots = 0.5;                 // Initial root mass in all layers
 Matrix RootMass;                        // initial root distribution (kg C/m2 in each layer)
 double ExudateFactor = 0.2;             // mass fraction of of below-ground production that consists of exudates
 double BioMass = 0.3;                   // above ground biomass kg C /m2 (standing crop)
+double MinBiomass = 0.1;                // minimum biomass, biomass will not drop below this minimum after harvest or during senescence stage
 double BioMassSenescence = 0.001;       // biomass senescence at each DAY as fraction of above-ground biomass
 Matrix Harvest;                         // harvest dates (1st column) and fraction of biomass harvested (2nd column)
 BOOLEAN Harvested = TRUE;               // indicates the occurrence of harvest
@@ -246,7 +242,9 @@ double T_ref = 11;                      // reference temperature for correction 
 double ThermDiff = -1.0;                // thermal diffusivity, if negative it is estimated from soil properties
                                         // this parameter is not used if ThermModel == 0
 char TFile[256] = "";                   // file with temperature time series; if empty string, a sinusoidal time series will be defined
-Matrix TData;                           // Air or soil temperature data from file Tfile
+char SoilTFile[256] = "";               // file with soil temperature time series; if empty string, soil temp calculated from TData
+Matrix TData;                           // Air temperature data from file Tfile
+Matrix SoilTData;                       // Soil temperature data
 Matrix Precipitation;					// Precipitation data (read from file)
 Matrix Evaporation;						// Evaporation data (read from file)
 Matrix GwData;                          // Groundwater table data from GWFile
@@ -388,14 +386,14 @@ Matrix LastSatTime;                      // Time after last complete saturation 
 Matrix ThermDiffVar;                     // thermal diffusivity layer dependent diffusivity
 Matrix HeatLayers;                       // layer midpoints layers thermal model
 Matrix MethaneR0Corr;                    // pH dependent methane production rate
-double TotalPrimProd = 0;                // total primary production
+double TotalNPP = 0.0;                   // total primary production
 
 Matrix NewSOM;                           // SOM reservoirs to be changed in each iteration step (kg C per layer)
 Matrix OldSOM;                           // SOM reservoirs to be changed in each iteration step (kg C per layer) for calculation of storage change
 Matrix PeatDecay;                        // logs true loss of peat matrix; 1st column total peat decomposition; 2nd column aerobic decomposition
 
 int ManureCount = 0;                     // counter manure additions
-double PrimProd;                         // Primary production per time step KgC/m2/timestep
+double NPP;                             // Net primary production (GPP - plant respiration) per time step KgC/m2/timestep
 double Shoots;                           // Shoot production per time step
 double SpringFactor;                     // instantaneous value of spring correction, declared global for use by environmental correction SOM decomposition for priming effect
 double PlantRespiration;                 // plant respiration kgCO2/m2/timestep
