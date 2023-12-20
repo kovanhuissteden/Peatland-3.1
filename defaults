@@ -45,6 +45,7 @@ ThermModel = 0;         % choice of soil thermal model:
                         % 0 for diffusivity varying with layer physical properties
                         % 1 for constant diffusivity
                         % 2 for constant temperature model
+SoilProfile = "SoilProfile";      			% Filename where the soil profile data are stored
 
 % PHYSICAL CONSTANTS that may vary
 
@@ -77,8 +78,8 @@ HalfSatPoint = 0.1;                             % half activity saturation point
 RootAeration = 0;                               % Root mass dependent correction (0 - 1) for improved aeration by root growth if 0, this is switched off
 PrimingCorrection = 0;                          % Root mass dependent priming effect root exudates on slow C reservoirs; value > 0; if 0, this is switched off
 Kdecay = [0.02 100 4 365 4 365 0.005];          % SOM decomposition constants for each reservoir
-Q10orArrhenius = 0;
-AerobicQ10 [3.5 2.0 2.0 2.0 3.0 2.0 4.0];       % Q10 values or molecular activation rates of aerobic decomposition separately for each reservoir
+Q10orArrhenius = 0;  % Temperature sensitivity calculated using Q10 relation (0) or Arrhenius equation (1)
+AerobicQ10 = [3.5 2.0 2.0 2.0 3.0 2.0 4.0];       % Q10 values or molecular activation rates of aerobic decomposition separately for each reservoir
 AnaerobicCO2 = 1;                               % Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 KAnaerobic = [0.005 0.01 0.01 0.01 0.01 0.01 0.0001]; % Anaerobic decomposition constants, for all SOM reservoirs
 Q10Anaerobic = 3.5;                             % Q10 anaerobic decomposition (reference temperature is equal to MethaneTref)
@@ -138,19 +139,19 @@ RootLambda = 5.0;                        % Decay rate exponential root distribut
 RootSenescence = 0.003;                 % root senescence factor = proportion of root mass that dies during each time step
 InitRoots = 0.05;                        % initial root mass in all layers
 ExudateFactor = 0.2;                    % mass fraction of of below-ground production that consists of exudates
-BioMass = 0.03;                         % initial above ground biomass kg C /m2 (standing crop)
+BioMass = 0.125;                         % initial above ground biomass kg C /m2 (standing crop)
                                         % NB: this is excluding the root mass, which is specified in InitRoots
 LitterLayer = 0.3;                      % organic matter stored in above ground litter layer, in kg C / m2
 
 LitterConversion = 0.001;                % Conversion factor of daily conversion of above ground to below ground litter at reference temperature Tref; the factor is temperature adjusted such that at 0 degrees the conversion factor is also 0
 BioMassSenescence = 0.001;			        % biomass senescence at each DAY as fraction of above-ground biomass
 Harvest = [180 0.75; 240 0.75];         % harvest dates (1st column) and fraction of biomass harvested (2nd column)
-HarvestCorrection = [0.1 7];            % Correction of GPP after harvest with reduction factor directly after harvest (first) and period of recovery in days (second)
+HarvestCorrection = [0.1 7];            % Correction of GPP after harvest with reduction factor directly after harvest (first) and period of recovery in days (second) for production model 4
 HarvestFile = "";				          % Textfile with harvest data: year, month, day, fraction of bimass harvested; if this is an empty string
 % the harvest parameter is used with fixed harvest dates each year
 HarvestLitter = 0.05;                   % fraction of harvest that remains as litter
 Manure = [80 0.1; 200 0.1];             % Manure application dates (column 1) and quantity (column 2) in kg C/m2/timestep
-MinBiomass = 0.1;
+MinBiomass = 0.05;
 Grazing = [0 130 0.0001 0.00005; 250 365 0.0001 0.00005];
 % Parts of the year in which grazing occurs, each row is a range of days
 % followed by the amount of biomass removed (kg C m2/day and the amount of excretion (kg C m2/day)

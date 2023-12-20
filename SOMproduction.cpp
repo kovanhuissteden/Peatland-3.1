@@ -58,26 +58,23 @@
 
 void OrgProd()
 /* Net Primary Production and its partitioning among roots and shoots */
-
 {
     int i, toproots = 0;
-    double gw, belowgwt = 0, abovegwt = 0, rootsadded, litter, f, totalroots, f_senescence, b, litterfac, T, maxLAI, minLAI, minBiomass, oldBiomass, oldrootmass, oldshoots, plantrespC, rootresp, overshoot;
+    double gw, belowgwt = 0, abovegwt = 0, rootsadded, litter, f, totalroots, f_senescence, b, litterfac, T, maxLAI, minLAI, oldBiomass, oldrootmass, oldshoots, plantrespC, rootresp, overshoot, deadrootslayer, exudateslayer;
     BOOLEAN autumn;
 
-  Matrix rd, exudates, deadroots;
+  Matrix rd, exudates, deadroots; // rd is rootdistribution, taking into account the NoRootsBelowGWT parameter
   Matrix result(2);
 
   // initalize LAI at the first time step
   maxLAI = Phenology(4);
   minLAI = (1.0 - Phenology(6)) * maxLAI;
-  minBiomass = minLAI * LAICarbonFraction;
   OldLitter = LitterLayer;   // store existing litter C for calculation of storage change in function CollectCO2
   oldrootmass = RootMass.Sum(); // store old rootmass and old biomass
   oldshoots = BioMass;
   TotalManure = 0.0;
 
-  //if (HarvestModel == 2) DateHarvest(minBiomass); else DoHarvest(minBiomass);      // harvest
-  DoHarvest();
+  DoHarvest(); // Harvest
   DoGraze();                                                      // grazing
   AddManure();
 
@@ -85,9 +82,9 @@ void OrgProd()
   {
         case 0: NPP = SimpleProd(); break;
         case 1: NPP = TemperatureProd(); break; // soil temperature dependent prduction
-        case 2: NPP = NPPData(StepNr);  // primary production from imported data
-        case 3: NPP = RadProd(); break; // Haxeltine and Prentice model, PAR calculated from total daily radiation.
-        case 4: NPP = TundraProd(); break; // Shaver photosynthesis model for tundra, PAR data supplied
+        case 2: NPP = NPPData(StepNr);  // net primary production from imported data
+        case 3: NPP = RadProd(); break; // Haxeltine and Prentice model
+        case 4: NPP = TundraProd(); break; // Shaver photosynthesis model for tundra
   }
 
   /* Plant respiration:
@@ -100,9 +97,10 @@ void OrgProd()
   if (ProductionModel < 3) {
       totalroots = RootMass.Sum();  // total root mass kg C
       plantrespC = RespFac(1) * NPP / Timestep + RespFac(2) * (BioMass + totalroots);
+      if (plantrespC > NPP) plantrespC = NPP;
       NPP -= plantrespC;
-      if (NPP < 0.0) NPP = 0.0;
       PlantRespiration = f * plantrespC;
+      GPP = NPP + PlantRespiration;
   }
     /* plant respiration for production model 3 and 4 is calculated as part of the photosynthesis module
      however, this differs between model 3 and 4; in 3, no root respiration is included
@@ -110,9 +108,10 @@ void OrgProd()
   if (ProductionModel == 3) { // Model 3 has only plant respiration of above-ground biomass
       totalroots = RootMass.Sum();  // total root mass kg C
       rootresp = RespFac(2) * totalroots;
+      if (rootresp > NPP) rootresp = NPP;
       NPP -= rootresp;
-      if (NPP < 0.0) NPP = 0.0;
       PlantRespiration = PlantRespiration + f * rootresp;
+      GPP = NPP + PlantRespiration;
   }
   CarbonBalance(StepNr, 15) = PlantRespiration * CONVKGCO2TOMOLC;
   if (ProfileOutput.Contains(8))
@@ -124,8 +123,10 @@ void OrgProd()
   CarbonBalance(StepNr, 1) = (NPP + PlantRespiration) * CONVKGCTOMOLC;
   TotalNPP += NPP;
   Shoots = ShootsFactor * NPP;                              // shoots production
-  overshoot = Shoots * LAIovershoot; // correction for overshooting max LAI by allocating more carbon to beloe-ground biomass
+  // !!!!!Not in CombinemeritHarvest branch
+  overshoot = Shoots * LAIovershoot; // correction for overshooting max LAI by allocating more carbon to below-ground biomass
   Shoots = Shoots - overshoot; // decrease allocation to shoots if overshoot occurred
+  // !!!!
   gw = GwData(StepNr);                                           // partition roots according to root distribution function
   if (NoRootsBelowGWT)                                           // no roots below groundwater table flag
   {
@@ -145,18 +146,27 @@ void OrgProd()
     } else rd(1) = 1.0; // water table above the profile, all roots added to top of profile
   } else rd = RootDistrib;
   rd *= (1.0 - ShootsFactor) * NPP;                            // calculates the amount of roots added per layer
-  rd = rd + overshoot; // additional allocation to belowground biomass if production overshoots max LAI
+  //!!!!!Not in CombinemeritHarvest branch
+  // rd = rd + overshoot; // additional allocation to belowground biomass if production overshoots max LAI
+  rd = rd + RootDistrib * overshoot; // additional allocation to belowground biomass if production overshoots max LAI
+  //!!!!!
   SpringFactor = 1 + SpringCorrection * sin(2 * PI * (DayNr + 284) / 365);  // spring factor to account for enhanced exudate production during active growing season
   exudates = rd * (SpringFactor * ExudateFactor);                 // exudates, are a fraction of the new root material added
   deadroots = RootMass * RootSenescence;          // organic material dying roots;
   for (i = 1; i <= NrLayers; i++)
   {
-    rootsadded = rd(i) - exudates(i) - deadroots(i);              // net root addition, prevent negative rootmass
-    RootMass(i) = RootMass(i) + rootsadded;
-
-    if (RootMass(i) < 0) {
-        RootMass(i) = 0;
+    deadrootslayer = deadroots(i);
+    exudateslayer = exudates(i);
+    rootsadded = rd(i) - exudateslayer - deadrootslayer;  // net root addition,
+    if ((rootsadded + RootMass(i)) < 0) {              // prevent negative rootmass
+        deadrootslayer = deadrootslayer * (RootMass(i) + rd(i)) / (deadrootslayer + exudateslayer);
+        exudateslayer = exudateslayer * (RootMass(i) + rd(i)) / (deadrootslayer + exudateslayer);
+        rootsadded = rd(i) - exudateslayer - deadrootslayer;
         cout << PRODUCTION_ERROR1 << endl;
+    }
+    RootMass(i) = RootMass(i) + rootsadded;
+    if (RootMass(i) < 0) { // to be sure, in case rounding causes small negative numbers
+        RootMass(i) = 0;
     }
     NewSOM(i, 4) = NewSOM(i, 4) + exudates(i);                    // add exudates and dead roots to SOM reservoirs
     NewSOM(i, 5) = NewSOM(i, 5) + deadroots(i);
@@ -170,7 +180,6 @@ void OrgProd()
     BioMassRec(StepNr, 8) = 0.0;
 // Biomass senescence and litter production
     oldBiomass = BioMass;
-    minBiomass = minLAI * LAICarbonFraction;
     if ((DayOfTheYear > Phenology(8)) || (DayOfTheYear < Phenology(7))) autumn = TRUE; else autumn = FALSE;
     if (ProductionModel < 3) {  // Litter production by dying off of above-ground biomass
         litter = BioMassSenescence * BioMass * Timestep; // a distinction between production models is maintained for keeping compatibility with earlier versions of the model
@@ -188,13 +197,9 @@ void OrgProd()
       } else f_senescence = 0;
       BioMass = (1 - f_senescence) * BioMass;
       if ((HDcount == 22) && (CurrentLAI < minLAI)) cout << StepNr << " LAI is not recovering to minimum LAI after harvest" << endl;
-      if (((HDcount > 21) || ((HDcount > 7) && (autumn == TRUE))) && (CurrentLAI < minLAI)) CurrentLAI = minLAI;
-  }
-
-  if (BioMass <= minBiomass){
-    BioMass = minBiomass;
-    CurrentLAI = minLAI;
-  }
+      if (((HDcount > 21) || (autumn == TRUE)) && (CurrentLAI < minLAI)) CurrentLAI = minLAI;
+      if (BioMass < MinBiomass) BioMass = MinBiomass;
+    }
   if (oldBiomass > BioMass) litter = oldBiomass - BioMass; else litter = 0.0;
   LitterLayer += litter;
   // convert aboveground litter to belowground litter reservoir
@@ -227,26 +232,23 @@ void OrgProd()
 //  Harvest function according to Merit; combines DoHarvest and DateHarvest
 void DoHarvest()
 // Harvest of biomass at selected dates
-
 {
   int i, l;
   double harvested, potentialharvest, remaining, add2litter, harvestfraction;
+  potentialharvest = BioMass - MinBiomass;
   HDcount += Timestep;      // Count of days after harvest. Used to correct GPP first 6 days after harvest in Shaver model TundraProd()
   if (HarvestModel == 2){
-    // Harvest 
-    // HYY = year (e.g. 2010), HMM = month (e.g. 3), HDD = dayofyear (e.g. 201) 
-    // Harv_height = fraction of biomass harvested
-    //
-    // Model 2 werkt niet, HYY en HDayNr blijven constant!
-    // Oorzaak: Error in het inlezen van de harvest dates
-    // DayOfTheYear is een integer, er hoeft geen 0.5 af te worden getrokken
-      
+    /* Harvest
+    HYY = year (e.g. 2010), HMM = month (e.g. 3), HDD = dayofyear (e.g. 201)
+    Harv_height = fraction of biomass harvested
+    */
     if ((HYY == CalendarYear) && (HdayNr == DayOfTheYear)){
-      remaining = BioMass * (1.0 - Harv_height); 
-      harvested = BioMass * Harv_height; 
+      harvested = BioMass * Harv_height;
+      if (harvested > potentialharvest){harvested = potentialharvest;}
+      remaining = BioMass - harvested;
       CurrentLAI *= (1.0 - (harvested/BioMass));
       BioMass -= harvested;
-      add2litter = harvested * 0.05; // 5% of harvest is added to litter layer
+      add2litter = harvested * HarvestLitter; // 5% of harvest is added to litter layer
       LitterLayer += add2litter;
       harvested = harvested - add2litter;
       HarvestGrazing += harvested;
@@ -261,11 +263,12 @@ void DoHarvest()
     for (i = 1; i <= l; i++)     // if the current day of the year falls within the current time step, cut the grass
     {
       if ((Harvest(i, 1) >= (DayOfTheYear - 0.5 * Timestep)) && (Harvest(i, 1) < (DayOfTheYear + 0.5 * Timestep))) {
-        remaining = BioMass * (1.0 - Harvest(i, 2)); 
         harvested = BioMass * Harvest(i, 2);
+        if (harvested > potentialharvest){harvested = potentialharvest;}
+        remaining = BioMass - harvested;
         CurrentLAI *= (1.0 - (harvested/BioMass));
         BioMass -= harvested;
-        add2litter = harvested * 0.05; // 5% of harvested biomass is lost to litter layer
+        add2litter = harvested * HarvestLitter; // 5% of harvested biomass is lost to litter layer
         LitterLayer += add2litter;
         harvested = harvested - add2litter;
         HarvestGrazing += harvested;

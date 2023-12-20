@@ -17,7 +17,7 @@
 
 //#include "matrix.h"
 
-#define PRODUCTION_ERROR1 "Primary production model: negative root mass, decrease RootSenescence parameter"
+#define PRODUCTION_ERROR1 "Primary production model: negative root mass occurred, decrease RootSenescence or ExudateFactor parameter"
 #define PRODUCTION_ERROR2 "Primary production model: above-ground Biomass below minimum, check BioMassSenescence, LAICarbonFraction parameter"
 #define PRODUCTION_ERROR3 "Primary production model: PARunits parameter specified incorrectly, should be 0, 1 or 2"
 extern BOOLEAN Verbose;
