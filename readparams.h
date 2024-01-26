@@ -47,6 +47,7 @@ readmatrix  - reads a matrix
 #define OUTPUT_BIO        "biomass.dat"
 #define OUTPUT_WTABLE     "watertable.dat"
 #define OUTPUT_ANAEROB    "anaerobCO2.dat"
+#define OUTPUT_ANAEROBRES "anaerobicCO2reservoirs.dat"
 #define OUTPUT_BALANCE    "carbonbalance.dat"
 #define OUTPUT_PEATDECOMP "peatdecomposition.dat"
 
@@ -221,6 +222,7 @@ extern Matrix HarvestCorrection;            // Correction of GPP after harvest w
 extern Matrix TotalMethane;              // storage matrix for CH4 fluxes ; 1st element: day number
 extern Matrix ReservoirTime;             // storage matrix for CO2 per reservoir per timestep ; 1st element: day number
 extern Matrix LayerTime;                 // storage matrix for CO2 per layer per timestep ; 1st element: day number
+extern Matrix AnaerobReservoirTime;       // storage matrix for anaerobic CO2 per reservoir per timestep ; 1st element: day number
 extern Matrix BioMassRec;                // storage of biomass, primary production and plant respiration
 extern Matrix FreezingCurve;             // Unfrozen water content curve at below zero temperatures
 extern Matrix LatentHeat;		 // parameters for approximation of temperature-dependent latent heat of fusion of ice J kg-1

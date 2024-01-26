@@ -72,7 +72,6 @@ void OrgProd()
   OldLitter = LitterLayer;   // store existing litter C for calculation of storage change in function CollectCO2
   oldrootmass = RootMass.Sum(); // store old rootmass and old biomass
   oldshoots = BioMass;
-  TotalManure = 0.0;
 
   DoHarvest(); // Harvest
   DoGraze();                                                      // grazing
@@ -183,8 +182,8 @@ void OrgProd()
     if ((DayOfTheYear > Phenology(8)) || (DayOfTheYear < Phenology(7))) autumn = TRUE; else autumn = FALSE;
     if (ProductionModel < 3) {  // Litter production by dying off of above-ground biomass
         litter = BioMassSenescence * BioMass * Timestep; // a distinction between production models is maintained for keeping compatibility with earlier versions of the model
+        if (litter > BioMass) litter = BioMass;
         BioMass -= litter;
-        if (BioMass < 0.0) BioMass = 0.0;
         CurrentLAI = BioMass / LAICarbonFraction;
     } else { // fraction of biomass shedded in autumn is dependent on decrease of LAI per time step
         if (HDcount > 21){ // normal biomass senescence only occurs more than 3 weeks after harvest
@@ -196,7 +195,7 @@ void OrgProd()
           }
       } else f_senescence = 0;
       BioMass = (1 - f_senescence) * BioMass;
-      if ((HDcount == 22) && (CurrentLAI < minLAI)) cout << StepNr << " LAI is not recovering to minimum LAI after harvest" << endl;
+      if ((HDcount == 22) && (CurrentLAI < minLAI)) cout << StepNr << PRODUCTION_ERROR4 << endl;
       if (((HDcount > 21) || (autumn == TRUE)) && (CurrentLAI < minLAI)) CurrentLAI = minLAI;
       if (BioMass < MinBiomass) BioMass = MinBiomass;
     }
@@ -205,27 +204,26 @@ void OrgProd()
   // convert aboveground litter to belowground litter reservoir
   T = SoilTemp(1);
   if (T > 0.0) { // only conversion if the soil is not frozen; otherwise no biologicaal activy to physically transport litter into the top layer
-
-        litterfac = T * (LitterConversion / T_ref);
-        litter = litterfac * LitterLayer;
-        NewSOM(1, 5) = NewSOM(1, 5) + litter;
-      LitterLayer -= litter;
+    litterfac = T * (LitterConversion / T_ref);
+    litter = litterfac * LitterLayer;
+    NewSOM(1, 5) = NewSOM(1, 5) + litter;
+    LitterLayer -= litter;  // litter is stored after litter decomposition in CollectCO2
   }
 
   BioMassRec(StepNr, 1) = DayNr;
   BioMassRec(StepNr, 2) = BioMass + totalroots;                     // log total biomass, kg C m-2
   BioMassRec(StepNr, 3) = NPP;    //  primary production kg C m-2 timestep-1
   BioMassRec(StepNr, 4) = PlantRespiration; // kg CO2 m-2 timestep-1
-  // litter is stored after litter decomposition in CollectCO2
   BioMassRec(StepNr, 8) = HarvestGrazing;
+  BioMassRec(StepNr, 9) = TotalManure;
+  BioMassRec(StepNr, 10) = CurrentLAI;
+  BioMassRec(StepNr, 11) = GPP;
   CarbonBalance(StepNr, 19) = HarvestGrazing  * CONVKGCTOMOLC;
   CarbonBalance(StepNr, 20) = (BioMass - oldshoots) * CONVKGCTOMOLC;
   CarbonBalance(StepNr, 21) = (totalroots - oldrootmass) * CONVKGCTOMOLC;
-  HarvestGrazing = 0.0;
-  BioMassRec(StepNr, 9) = TotalManure;
   CarbonBalance(StepNr, 2) = TotalManure * CONVKGCTOMOLC;
-  BioMassRec(StepNr, 10) = CurrentLAI;
-  BioMassRec(StepNr, 11) = GPP;
+  HarvestGrazing = 0.0;
+  TotalManure = 0.0;
 }
 
 
@@ -339,7 +337,6 @@ double PARcalc()
 // for other models than shaver!!
 {
     double par = 0.0; // photosynthetically active radiation in joule per square meter per day
-    double shortwave = 0.0; // total daily shortwave radiation joule per square cm
     double aa; // solar declination
     double c = 0.45, d = 0.9, ni = 1.0; // coeff eq A3 Haxeltine and Prentice
     double beta = 0.17; // albedo eq A3 Haxeltine and Prentice

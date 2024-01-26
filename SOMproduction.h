@@ -20,6 +20,7 @@
 #define PRODUCTION_ERROR1 "Primary production model: negative root mass occurred, decrease RootSenescence or ExudateFactor parameter"
 #define PRODUCTION_ERROR2 "Primary production model: above-ground Biomass below minimum, check BioMassSenescence, LAICarbonFraction parameter"
 #define PRODUCTION_ERROR3 "Primary production model: PARunits parameter specified incorrectly, should be 0, 1 or 2"
+#define PRODUCTION_ERROR4 "Primary production model: LAI is not recovering to minimum LAI after harvest"
 extern BOOLEAN Verbose;
 extern double DayOfTheYear;                  // Julian day number of the midpoint of the simulated time step relative to the current year;
 extern int ProductionModel;                  // Production model: 0 for simple sinusoidal function; 1 for production dependent on temperature of upper soil layer

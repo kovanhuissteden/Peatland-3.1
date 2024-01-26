@@ -71,14 +71,15 @@ extern ofstream *output16;
 extern ofstream *output17;
 extern int StepNr;                // time step number during iteration
 extern Matrix ReservoirTime;      // storage matrix for CO2 per reservoir per timestep
+extern Matrix AnaerobReservoirTime;       // storage matrix for anaerobic CO2 per reservoir per timestep ; 1st element: day number
 extern Matrix LayerTime;          // storage matrix for CO2 per layer per timestep
-
 extern Matrix CO2FromMethaneOx;     // CO2 from methane oxidation
 extern double DayNr;              // midpoint of simulated timestep, relative to day 1 of the year in which the simulation started
 extern int AnaerobicCO2;          // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2
 extern Matrix KAnaerobic;         // Anaerobic decomposition constants
 extern double Q10Anaerobic;       // Q10 anaerobic decomposition
 extern Matrix LayerAnaerobic;      // Anaerobic CO2 per layer
+extern Matrix AnaerobSumRes;      // sum of anaerobic CO2 per reservoir
 extern Matrix AnaerobSum;          // sum of anaerobic CO2 per layer
 extern double MethaneTRef;        // Reference temperature for temperature sensitivity methane production
 extern double KLitter;            // decomposition constant above-ground litter and standing dead biomass

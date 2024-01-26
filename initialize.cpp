@@ -104,7 +104,7 @@ void OutputInit()                                     // initializes output arra
   LayerTime.Resize(NrOfSteps, NrLayers + 1);           // storage matrix for CO2 per layer per timestep
                                                       // NOTE: only Walters model is used here, in the Matlab version there was a choice of two models
   BioMassRec.Resize(NrOfSteps, 11);                    // storage of biomass, 1: time (days); 2: total plant biomass including roots (kg C.m-2); 3: primary production; 4: // plant respiration; 5: net CO2 flux (soil respiration + plant repiration - primary production); 6: soil respiration + dark respiration of vegetation (mg.m-2.hr-1); 7: // litter mass (kg C.m-2); 8: biomass removed by harvest and grazing 9: LAI
-
+  AnaerobReservoirTime.Resize(NrOfSteps, NrReservoirs + 1);
   LayerAnaerobic.Resize(NrOfSteps, NrLayers);
   CarbonBalance.Resize(NrOfSteps, 26);
 }
@@ -377,6 +377,15 @@ void InitLogFiles()
             exit(EXIT_FAILURE);
         }
     }
+    if (ProfileOutput(i) == 10)
+    {
+      output10 = new ofstream(strcat(buf, OUTPUT10));
+      if (!output10)
+      {
+        cout  << INIT_ERROR2 << OUTPUT10 << endl;
+        exit(EXIT_FAILURE);
+      }
+	}
     if (ProfileOutput(i) == 11)
     {
       output11 = new ofstream(strcat(buf, OUTPUT11));
@@ -461,6 +470,7 @@ int i;
     if (ProfileOutput(i) == 7) output7->close();
     if (ProfileOutput(i) == 8) output8->close();
     if (ProfileOutput(i) == 9) output9->close();
+    if (ProfileOutput(i) == 10) output10->close();
     if (ProfileOutput(i) == 11) output11->close();
     if (ProfileOutput(i) == 12) output12->close();
     if (ProfileOutput(i) == 13) output13->close();
@@ -520,6 +530,7 @@ Decompositon constant for peat is corrected by C/N ratio of layers */
 // The decay constant k is usually measured from transfer to CO2 only. The total transfer (corrected k)
 // is the sum of transfer to CO2, microbial biomass and humus.
   CorrFac.Resize(NrLayers, NrReservoirs);
+  AnaerobSumRes.Resize(NrReservoirs);   // sum of anaerobic CO2 per reservoir
   AnaerobSum.Resize(NrLayers);          // sum of anaerobic CO2 per layer
 }  // end of function CorrectDecomp
 

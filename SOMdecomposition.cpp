@@ -114,6 +114,7 @@ void Decompose()
   decomposedC.Fill(0.0);                             // anaerobic CO2
   anaerob.Resize(NrReservoirs);                 // anaerobic reservoir per layer
   AnaerobSum.Fill(0.0);                         // total anaerobic CO2 produced in timestep
+  AnaerobSumRes.Fill(0.0);                         // total anaerobic CO2 produced in timestep per reservoir
   anaerob.Fill(0.0);
   CO2.Fill(0.0);
   PeatLoss = 0.0;
@@ -166,20 +167,20 @@ void Decompose()
                 anaerobCO2(i, j) = anaerob(j) * ( 1.0 - (exp(- dt * ka)));   // anaerobically produced CO2 as difference between size of anearobic reservoir before and after time step as above for aerobic CO2
                 NewSOM(i, j) -= anaerobCO2(i, j);
             }
-            for (m = 1; m <= 5; m++) {  // correct for transfer ot microbial and resistant reservoir for the  first 5 reservoirs; decomposed C is moved to microbial and resistant fraction
+            for (m = 1; m <= 5; m++) {  // correct for transfer of microbial and resistant reservoir for the  first 5 reservoirs; decomposed C is moved to microbial and resistant fraction
                 transfermicrob = anaerobCO2(i, m) * SplitRes(m, 3);  // transfer of assimilated microbial biomass to microbial biomass reservoir
                 anaerobCO2(i, m) -= transfermicrob;  // correct anaerobically produced CO2 for assimilation
                 NewSOM(i, 6) = NewSOM(i, 6) + transfermicrob; // add to microbial biomass reservoir
                 transferresist = anaerobCO2(i, m) * SplitRes(m, 2);  // transfer of resistant fraction
                 anaerobCO2(i, m) -= transferresist;  // correct anaerobically produced CO2 for assimilation
                 NewSOM(i, 7) = NewSOM(i, 7) + transferresist; // add to resistant reservoir
-                //cout << anaerobCO2(i, m) << "|" << NewSOM(i, m) << endl;
             }
             for (m = 1; m <= NrReservoirs; m++) CO2(i, m) += anaerobCO2(i, m);       // add anaerobically produced CO2 to CO2 carbon
             AnaerobSum(i) = anaerobCO2.SumRow(i); // sum over all reservoirs for layer total
         }
     } // end anaerobic CO2 calculation
   }
+  for (m = 1; m <= NrReservoirs; m++) AnaerobSumRes(m) += anaerobCO2.SumCol(m); // summation of anaerobic CO2 per reservoir
   if (Q10orArrhenius == 0) tcorr = AerobicQ10(5); // litter temperature decomposition correction
   litterTfact = pow(tcorr, ((TData(StepNr) - T_ref) / 10.0)); // temperature sensitivity of litter decomposition is fixed at Q10 = 2.0
   ka = KLitter * litterTfact;
@@ -261,12 +262,13 @@ void CollectCO2()
 // Also adds soil organic matter reservoir changes to the carbon balance
 {
   int i;
-  double f, c, ct;
+  double f, c, ca, ct;
   Matrix storagechange;
 
   f = C_CO2*1000000.0/(24*Timestep);                         // conversion factor from kg C/m-2/timestep into mg CO2 m-2/hr
   LayerTime(StepNr, 1) = DayNr;
   ReservoirTime(StepNr, 1) = DayNr;
+  AnaerobReservoirTime(StepNr, 1) = DayNr;
   ct = 0.0;
   for (i = 1; i <= NrReservoirs; i++)
   {
@@ -282,6 +284,14 @@ void CollectCO2()
   ReservoirTime(StepNr, NrReservoirs + 3) = c;
   ct += c;
   ReservoirTime(StepNr, NrReservoirs + 4) = ct;             // total CO2 is last column of Reservoirtime
+  for (i = 1; i <= NrReservoirs; i++) // Anaerobic CO2 per reservoir
+  {
+    ca = f * AnaerobSumRes(i);
+    AnaerobReservoirTime(StepNr, i + 1) = ca;                       // CO2 per reservoir
+    // summation of anaerob CO2 from non-CH4 anaerobic reactions
+    // adding CO2 from methane production requires including CO2 per reservoir recording in methane production functions
+  }
+
   for (i = 1; i <= NrLayers; i++)
   {
     LayerTime(StepNr, i + 1) = f * CO2.SumRow(i);

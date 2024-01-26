@@ -29,6 +29,7 @@
 #define OUTPUT7     "watertable.dat"
 #define OUTPUT8     "npp.dat"
 #define OUTPUT9     "totalSOM.dat"
+#define OUTPUT10    "anaerobicCO2reservoirs.dat"
 #define OUTPUT11    "peat.dat"
 #define OUTPUT12    "liquid_manure.dat"
 #define OUTPUT13    "solid_manure.dat"
@@ -59,6 +60,7 @@ extern Matrix RootMass;                   // initial root distribution (kg C/m2 
 extern double InitRoots;                  // Initial root mass in all layers
 extern Matrix TotalReservoir;             // totals C per reservoir per layer
 extern Matrix ReservoirTime;              // storage matrix for CO2 per reservoir per timestep
+extern Matrix AnaerobReservoirTime;       // storage matrix for anaerobic CO2 per reservoir per timestep ; 1st element: day number
 extern Matrix LayerTime;                  // storage matrix for CO2 per layer per timestep
 extern int NrReservoirs;                  // Number of SOM reservoirs
 extern int NrOfSteps;                     // number of time steps
@@ -141,6 +143,7 @@ extern ofstream *output6;
 extern ofstream *output7;
 extern ofstream *output8;
 extern ofstream *output9;
+extern ofstream *output10;
 extern ofstream *output11;
 extern ofstream *output12;
 extern ofstream *output13;
@@ -183,7 +186,7 @@ extern Matrix RunOn;                     // Matrix with Run-on water quantity
 extern int AnaerobicCO2;                   // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 extern Matrix LayerAnaerobic;             // Anaerobic CO2 per layer
 extern Matrix AnaerobSum;          // sum of anaerobic CO2 per layer
-
+extern Matrix AnaerobSumRes;      // sum of anaerobic CO2 per reservoir
 extern double MethaneVmax;              // Vmax Michaelis-Menten eq methane oxidation micrMol/hr range 5-50
 extern double MethaneKm;                // Km Michaelis-Menten eq methane oxidation micrMol range 1-5
 extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C

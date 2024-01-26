@@ -125,6 +125,7 @@ int Q10orArrhenius = 0;                 //Switch between temperature correction 
 int AnaerobicCO2 = 0;                   // Switch for allowing anaerobic decomposition (sulfate etc) resulting in CO2, if 0 not accounted for
 Matrix KAnaerobic(7);                   // Anaerobic decomposition constants, for all SOM reservoirs
 Matrix LayerAnaerobic;                  // Anaerobic CO2 per layer
+Matrix AnaerobSumRes;                   // sum of anaerobic CO2 per reservoir
 Matrix AnaerobSum;                      // sum of anaerobic CO2 per layer
 double Q10Anaerobic = 3.5;              // Q10 or Arrhenius Molecular activation rate of anaerobic decomposition
 double KLitter = 0.5;                   // decomposition constant above-ground litter and standing dead biomass
@@ -302,6 +303,7 @@ Matrix Ice;                             // Ice content (kg ice / kg dry soil)
 
 Matrix TotalReservoir;                  // totals C per reservoir per layer
 Matrix ReservoirTime;                   // storage matrix for CO2 per reservoir per timestep ; 1st element: day number
+Matrix AnaerobReservoirTime;            // storage matrix for anaerobic CO2 per reservoir per timestep ; 1st element: day number
 Matrix LayerTime;                       // storage matrix for CO2 per layer per timestep ; 1st element: day number
 Matrix TotalMethane;                    // storage matrix for CH4 fluxes ; 1st element: day number
 Matrix BioMassRec;                      // storage of biomass, primary production and plant respiration
@@ -356,6 +358,7 @@ ofstream *output6;
 ofstream *output7;
 ofstream *output8;
 ofstream *output9;
+ofstream *output10;
 ofstream *output11;
 ofstream *output12;
 ofstream *output13;

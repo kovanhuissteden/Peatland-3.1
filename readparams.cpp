@@ -1228,6 +1228,7 @@ void WriteOutput()
   char buf[1024];
   ofstream *output;
 
+  // Methane output
   strcpy(buf, &DataDir[0]);
   strcat(buf, &OutputFilePrefix[0]);
   output = new ofstream(strcat(buf, OUTPUT_METHANE));
@@ -1238,6 +1239,7 @@ void WriteOutput()
   }
   TotalMethane.Write(output);
   output->close();
+  // Aerobic CO2 from reservoirs
   strcpy(buf, &DataDir[0]);
   strcat(buf, &OutputFilePrefix[0]);
   output = new ofstream(strcat(buf, OUTPUT_CO2RES));
@@ -1248,6 +1250,7 @@ void WriteOutput()
   }
   ReservoirTime.Write(output);
   output->close();
+  // output aerobic CO2 per layer
   strcpy(buf, &DataDir[0]);
   strcat(buf, &OutputFilePrefix[0]);
   output = new ofstream(strcat(buf, OUTPUT_CO2LAY));
@@ -1258,6 +1261,19 @@ void WriteOutput()
   }
   LayerTime.Write(output);
   output->close();
+  // Anaerobc CO2 per reservoir
+
+  strcpy(buf, &DataDir[0]);
+  strcat(buf, &OutputFilePrefix[0]);
+  output = new ofstream(strcat(buf, OUTPUT_ANAEROBRES));
+  if (!output)
+  {
+    cout  << ERRORMSG11 << OUTPUT_ANAEROBRES << endl;
+    exit(EXIT_FAILURE);
+  }
+  AnaerobReservoirTime.Write(output);
+  output->close();
+  // output biomass
   strcpy(buf, &DataDir[0]);
   strcat(buf, &OutputFilePrefix[0]);
   output = new ofstream(strcat(buf, OUTPUT_BIO));
@@ -1268,6 +1284,7 @@ void WriteOutput()
   }
   BioMassRec.Write(output);
   output->close();
+  // anaerobic CO2 per layer
   if (AnaerobicCO2 > 0) {
     strcpy(buf, &DataDir[0]);
     strcat(buf, &OutputFilePrefix[0]);
@@ -1280,7 +1297,7 @@ void WriteOutput()
     LayerAnaerobic.Write(output);
     output->close();
   }
-
+// Carbon balance
   strcpy(buf, &DataDir[0]);
   strcat(buf, &OutputFilePrefix[0]);
   output = new ofstream(strcat(buf, OUTPUT_BALANCE));
@@ -1291,7 +1308,7 @@ void WriteOutput()
   }
   CarbonBalance.Write(output);
   output->close();
-  
+// Peat decomposition
   strcpy(buf, &DataDir[0]);
   strcat(buf, &OutputFilePrefix[0]);
   output = new ofstream(strcat(buf, OUTPUT_PEATDECOMP));
