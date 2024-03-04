@@ -444,7 +444,7 @@ groundwater table */
 {
   int a, i, j;
   double h, w, lh, theta, t, s, currenttime;
-  Matrix result(2);
+  Matrix result(2), wfps;
 
   t = StepNr;
   if (initial) MatricPotential.Resize(NrLayers); else MatricPotential.Fill(0.0);  // array for matric potential
@@ -483,10 +483,9 @@ groundwater table */
       a = (int)Layers(i, 4);                             // soil profile horizon number
       MoistTheta(i) = Porosity(a);                       // basic assumption: layer is saturated
       h = Layers(i, 1) - CurrentGW;                      // position of groundwater table with reference to layer top
-/* NOTE: contratrary to the former version of PEATLAND, the layer is not saturated
-if the groundwater table is anywhere below the top of the layer. If the water table is within the layer
-the volumetric water content is computed based on the water content of the saturated part end the theta for
-based on the potential halfway the unsaturated part. */
+/* NOTE: the layer is not saturated if the groundwater table is anywhere below the top of the layer.
+ * If the water table is within the layer, the volumetric water content is computed based on the water content of the saturated part
+ * and the theta based on the soil water potential halfway the unsaturated part. */
       if (h > 0.00001)                                   // layer completely or partly above the water table
       {
         if (h >= LayerThickness)                         // layer completely above the water table
@@ -519,7 +518,7 @@ based on the potential halfway the unsaturated part. */
   {
     s = (PoreVol(i) - MoistTheta(i)) / PoreVol(i);
     if (s < 0.0001) s = 0.0;
-    Saturation(i) = s;
+    Saturation(i) = s; //NOTE: s is in fact 1 - water filled pore space, or the unsaturated fraction
     if (s > 0) TopSat = i;
     if (s == 0.0)
     {
@@ -527,8 +526,9 @@ based on the potential halfway the unsaturated part. */
     } else LastSatTime(i) = 0.0;
   }
   TopSat +=1;
+  wfps = 1.0 - Saturation;
   if ((!initial) && ProfileOutput.Contains(2)){
-      Saturation.Write(output2b);
+      wfps.Write(output2b);
       MoistTheta.Write(output2a);
   }
 }

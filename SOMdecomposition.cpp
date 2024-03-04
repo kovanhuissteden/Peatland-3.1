@@ -104,8 +104,8 @@ void Decompose()
 
 {
   int i, j, n, m;
-  double h, unsatfraction, dt, transfermicrob, transferresist, soilT, anaertemperaturefact, ka, decomp, anaerobtotal = 0.0, aerobtotal = 0.0, tcorr = 2.0, litterTfact;
-  Matrix k, aerob, anaerob, anaerobCO2, decomposedC;
+  double h, unsatfraction, dt, transfermicrob, transferresist, soilT, anaertemperaturefact, ka, decomp, anaerobtotal = 0.0, aerobtotal = 0.0, tcorr = 2.0, litterTfact, satconst, unsat;
+  Matrix k, aerob, anaerob, anaerobCO2, decomposedC, aerobfraction;
 
   dt = Timestep / YEAR;                           // timestep in years
   anaerobCO2.Resize(NrLayers, NrReservoirs);     // initialize arrays
@@ -116,6 +116,8 @@ void Decompose()
   AnaerobSum.Fill(0.0);                         // total anaerobic CO2 produced in timestep
   AnaerobSumRes.Fill(0.0);                         // total anaerobic CO2 produced in timestep per reservoir
   anaerob.Fill(0.0);
+  aerobfraction.Resize(NrLayers);               // Aerobic fraction of layer, for output to file aerobfraction
+  aerobfraction.Fill(0.0);
   CO2.Fill(0.0);
   PeatLoss = 0.0;
   //cout << CurrentGW << endl;
@@ -125,7 +127,29 @@ void Decompose()
     h = Layers(i, 1) - CurrentGW;               // h is used to check if a layer is partly or entirely above the water table
 /* calculate aerob and anaerobic fraction of organic C for layers at the groundwater table
    aerobic decomposition is only computed from the above the water table part */
-    if (h <= 0.0) unsatfraction = 0.0; else if (h < LayerThickness) unsatfraction = 1.0 - h / LayerThickness; else unsatfraction = 1.0;  // fraction above water table
+    if (h <= 0.0) unsatfraction = 0.0; else { //unsatfraction value is 0.0 when layer is completely saturated with water
+        if (h < LayerThickness) unsatfraction = 1.0 - h / LayerThickness; else unsatfraction = 1.0;
+        /* fraction of layer above water table
+         * if there is no partial anaerobic condition assumed above teh water table, it is assumed that all of the organic matter in the layer
+         * is accessible for aerobic decomposition, reflected by unsatfraction = 1.0;*/
+    }
+    if (PartialAnaerobe > 1.0)
+    /* determination of anaerobic fraction, in case of partial anaerobic condition is allowed above the water table
+     * PartialAnaerobe decreases the unsat fraction by assuming that a part of layer is not accesible for oxygen
+     * the decrease is assumed linearly related to the aeration, recorded in the Saturation matrix
+     * AnaerobeLagFactor (see methane.cpp) is not yet applied here;
+     * probably for anaerobe CO2 formation this needs to be somewhat smaller than for CH4 */
+    {
+        satconst = 1.0 / PartialAnaerobe;
+        unsat = Saturation(i);
+        if (unsat < satconst)
+        {
+            unsatfraction = unsat / PartialAnaerobe;
+            //cout << unsatfraction << endl;
+        }
+    }
+    aerobfraction(i) = unsatfraction;
+    // cout << unsatfraction << endl;
     aerob = NewSOM.Row(i) * unsatfraction;  // fraction of C above water table
     anaerob = NewSOM.Row(i) * (1.0 - unsatfraction); // fraction of anaerobic C below water table
     if (unsatfraction > 0.0)                      // aerobic decomposition above the water table
@@ -188,6 +212,7 @@ void Decompose()
   LitterLayer -= LitterDecomp; // decrease litter layer carbon
   CarbonBalance(StepNr, 10) += aerobtotal* CONVKGCTOMOLC;
   CarbonBalance(StepNr, 12) += LitterDecomp * CONVKGCTOMOLC;
+  aerobfraction.Write(output2c);
 }    // end Decompose
 
 

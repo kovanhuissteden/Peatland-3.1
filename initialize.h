@@ -21,7 +21,8 @@
 #define INIT_ERROR3 "Negative methane production rate, check MethaneR0 and pH correction"
 #define OUTPUT1     "temperature.dat"
 #define OUTPUT2A    "moisture.dat"
-#define OUTPUT2B    "saturation.dat"
+#define OUTPUT2B    "wfps.dat"
+#define OUTPUT2C    "aerobfraction.dat"
 #define OUTPUT3     "methane.dat"
 #define OUTPUT4     "roots.dat"
 #define OUTPUT5     "labileSOM.dat"
@@ -136,6 +137,7 @@ extern Matrix ProfileOutput;              // determines which vertical profiles 
 extern ofstream *output1;                 // output log files
 extern ofstream *output2a;
 extern ofstream *output2b;
+extern ofstream *output2c;
 extern ofstream *output3;
 extern ofstream *output4;
 extern ofstream *output5;

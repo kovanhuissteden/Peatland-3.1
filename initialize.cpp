@@ -313,6 +313,14 @@ void InitLogFiles()
         cout  << INIT_ERROR2 << OUTPUT2B << endl;
         exit(EXIT_FAILURE);
       }
+      strcpy(buf, &DataDir[0]);
+      strcat(buf, &OutputFilePrefix[0]);
+      output2c = new ofstream(strcat(buf, OUTPUT2C));
+      if (!output2c)
+      {
+        cout  << INIT_ERROR2 << OUTPUT2C << endl;
+        exit(EXIT_FAILURE);
+      }
     }
     if (ProfileOutput(i) == 3)
     {
@@ -462,6 +470,7 @@ int i;
     if (ProfileOutput(i) == 2) {
         output2a->close();
         output2b->close();
+        output2c->close();
     }
     if (ProfileOutput(i) == 3) output3->close();
     if (ProfileOutput(i) == 4) output4->close();

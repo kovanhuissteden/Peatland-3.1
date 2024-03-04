@@ -69,6 +69,7 @@ extern ofstream *output14;
 extern ofstream *output15;
 extern ofstream *output16;
 extern ofstream *output17;
+extern ofstream *output2c;
 extern int StepNr;                // time step number during iteration
 extern Matrix ReservoirTime;      // storage matrix for CO2 per reservoir per timestep
 extern Matrix AnaerobReservoirTime;       // storage matrix for anaerobic CO2 per reservoir per timestep ; 1st element: day number
@@ -85,6 +86,8 @@ extern double MethaneTRef;        // Reference temperature for temperature sensi
 extern double KLitter;            // decomposition constant above-ground litter and standing dead biomass
 extern double OldLitter;                 // For calculation of storage change of litter layer
 extern Matrix CarbonBalance;             // Carbon balance: primary production, C exported, and change in carbon reservoirs in Mol C
+extern double PartialAnaerobe;           // Determines the slope of the relation of partial anaerobe soil fraction above the water table to soil saturation, >1
+
 /******************** FUNCTION DEFINITIONS ***********************************/
 
 

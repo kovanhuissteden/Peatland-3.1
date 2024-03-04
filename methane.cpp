@@ -322,13 +322,13 @@ anaerob: anaerobically prduced CO2
       if (AnaerobeLagFactor > 0.0) delayfac = 1 - exp(-AnaerobeLagFactor * (LastSatTime(i) + ttime) * labileC(i,1)); else delayfac = 1.0;
     } else delayfac = 1.0;
     t = SoilTemp(i);				// soil temperature
-    if (PartialAnaerobe > 1.0) 			// determination of anaerobic fraction, fsat value is 0.0 when comletely saturated with water
+    if (PartialAnaerobe > 1.0) 			// determination of anaerobic fraction, fsat value is 0.0 when completely saturated with water
     {
         fsat = Saturation(i);
-        satconst = 1.0/PartialAnaerobe;
+        satconst = 1.0 / PartialAnaerobe;
         if (fsat < satconst)
         {
-            anaerobe = 1.0 - PartialAnaerobe * fsat; 
+            anaerobe = 1.0 - PartialAnaerobe * fsat;
         } else anaerobe = 0.0;
     } else					// no anaerobe fraction above the water table assumed
     {

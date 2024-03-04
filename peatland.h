@@ -351,6 +351,7 @@ Matrix ProfileOutput;                    // determines which vertical profiles a
 ofstream *output1;                       // output log files
 ofstream *output2a;
 ofstream *output2b;
+ofstream *output2c;
 ofstream *output3;
 ofstream *output4;
 ofstream *output5;
