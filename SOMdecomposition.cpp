@@ -162,7 +162,7 @@ void Decompose()
         NewSOM (i,j) = NewSOM(i, j) - decomposedC(i,j); // subtract removed carbon from SOM reservoir
       }
       // PeatLoss += CO2(i, 1);  // total aerobic decomposition of peat carbon
-      PeatLoss += decomposedC(i, 1);  // total aerobic decomposition of peat carbon
+      PeatLoss = decomposedC(i, 1);  // total aerobic decomposition of peat carbon
       for (m = 1; m <= 5; m++)  // correct for transfer ot microbial and resistant reservoir for the  first 5 reservoirs; decomposed C is moved to microbial and resistant fraction
       {
         transfermicrob = decomposedC(i, m) * SplitRes(m, 1);  // split removed carbon in CO2 and transfer of assimilated microbial biomass to microbial biomass reservoir
@@ -172,6 +172,7 @@ void Decompose()
         NewSOM(i, 7) = NewSOM(i, 7) + transferresist;     // add to resistant reservoir
         decomposedC(i, m) = decomposedC(i, m) - transferresist;   // substract from decomposed carbon, remainder is true CO2 created
       }
+      CO2fromPeat(1, i) = decomposedC(i, 1);
       aerobtotal += decomposedC.SumRow(i); // total aerobically produced CO2 for carbon balance
       for (m = 1; m <= NrReservoirs; m++) CO2(i, m) += decomposedC(i, m);  // add produced CO2 to total CO2 array
     }  // end of above-water table calculation
@@ -191,6 +192,7 @@ void Decompose()
                 anaerobCO2(i, j) = anaerob(j) * ( 1.0 - (exp(- dt * ka)));   // anaerobically produced CO2 as difference between size of anearobic reservoir before and after time step as above for aerobic CO2
                 NewSOM(i, j) -= anaerobCO2(i, j);
             }
+            AnaerobicPeatLoss = anaerobCO2(i, 1);  // total anaerobic decomposition of peat carbon
             for (m = 1; m <= 5; m++) {  // correct for transfer of microbial and resistant reservoir for the  first 5 reservoirs; decomposed C is moved to microbial and resistant fraction
                 transfermicrob = anaerobCO2(i, m) * SplitRes(m, 3);  // transfer of assimilated microbial biomass to microbial biomass reservoir
                 anaerobCO2(i, m) -= transfermicrob;  // correct anaerobically produced CO2 for assimilation
@@ -199,6 +201,7 @@ void Decompose()
                 anaerobCO2(i, m) -= transferresist;  // correct anaerobically produced CO2 for assimilation
                 NewSOM(i, 7) = NewSOM(i, 7) + transferresist; // add to resistant reservoir
             }
+            CO2fromPeat(1, i + NrLayers) = anaerobCO2(i, 1);
             for (m = 1; m <= NrReservoirs; m++) CO2(i, m) += anaerobCO2(i, m);       // add anaerobically produced CO2 to CO2 carbon
             AnaerobSum(i) = anaerobCO2.SumRow(i); // sum over all reservoirs for layer total
         }
@@ -316,7 +319,6 @@ void CollectCO2()
     // summation of anaerob CO2 from non-CH4 anaerobic reactions
     // adding CO2 from methane production requires including CO2 per reservoir recording in methane production functions
   }
-
   for (i = 1; i <= NrLayers; i++)
   {
     LayerTime(StepNr, i + 1) = f * CO2.SumRow(i);
@@ -329,8 +331,17 @@ void CollectCO2()
   CarbonBalance(StepNr, 11) = AnaerobSum.Sum() * CONVKGCTOMOLC;
   CarbonBalance(StepNr, 22) = (LitterLayer - OldLitter) * CONVKGCTOMOLC;
   OldLitter = LitterLayer;
+  //PeatDecay matrix stores day nr, storage change of peat reservoir, peat C lost per layer by aerobic decomp., C lost per layer by anaerobic decomp, groundwater table
+  // UNITS : storage change, total aerobic and anaerobic peat loss are in kg C per time step, CO2-C from peat per layer in g / layer /timestep
   PeatDecay(StepNr, 1) = storagechange.SumCol(1);
   PeatDecay(StepNr, 2) = PeatLoss;
+  PeatDecay(StepNr, 3) = AnaerobicPeatLoss;
+  for (i = 1; i <= NrLayers; i++)
+  {
+      PeatDecay(StepNr, 3 + i) = CO2fromPeat(1, i) * 1000.0;
+      PeatDecay(StepNr, 3 + i + NrLayers) = CO2fromPeat(1, i + NrLayers) * 1000.0;
+  }
+  PeatDecay(StepNr, 2 * NrLayers + 4) = CurrentGW;
   for (i = 10; i <= 15; i++) CarbonBalance(StepNr, 23) += CarbonBalance(StepNr, i);  // sum of all carbon emission
   CarbonBalance(StepNr, 23) += CarbonBalance(StepNr, 19); //Carbon loss by harvest and grazing
   CarbonBalance(StepNr, 24) += CarbonBalance(StepNr, 1) + CarbonBalance(StepNr, 2);  // sum of incoming carbon

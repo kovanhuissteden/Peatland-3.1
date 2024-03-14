@@ -240,7 +240,8 @@ void InitTseries()
       day += Timestep;
     }
   }
-  PeatDecay.Resize(NrOfSteps, 2);         // PeatDecay logs true loss of peat matrix
+  PeatDecay.Resize(NrOfSteps, 2 * NrLayers + 4);         // PeatDecay logs true loss of peat matrix
+  CO2fromPeat.Resize(1, 2 * NrLayers);                        //CO2 from peat per layer, 2 x NrLayers, first aerobic, second anaerobic
 }
 
 void InitWater()

@@ -405,6 +405,8 @@ Matrix CorrFac;                          // environmental correction factors for
 double CurrentGW;                        // Current water table during time step
 
 double PeatLoss = 0.0;                     // Totalized loss of peat C over all layers
+double AnaerobicPeatLoss = 0.0;           // Totalized anaerobic loss of peat C over all layers excl CH4
+Matrix CO2fromPeat;                        //CO2 from peat per layer, 2 x NrLayers, first aerobic, second anaerobic
 Matrix CO2;                              // CO2 carbon evolved from each layer and reservoir
 Matrix MethaneFlux;                      // Methane flux at surface;  1st value: ebullition flux; 2nd: plant mediated flux; 3d:diffusive flux
 int TopSat;                              // Index of first saturated layer

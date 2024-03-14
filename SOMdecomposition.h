@@ -57,6 +57,8 @@ extern Matrix NewSOM;             // SOM reservoirs to be changed in each iterat
 extern Matrix OldSOM;                           // SOM reservoirs to be changed in each iteration step (kg C per layer) for calculation of storage change
 extern Matrix PeatDecay;                        // logs true loss of peat matrix
 extern double PeatLoss;           // Totalized aerobic loss of peat C over all layers
+extern double AnaerobicPeatLoss;           // Totalized anaerobic loss of peat C over all layers excl CH4
+extern Matrix CO2fromPeat;                        //CO2 from peat per layer, 2 x NrLayers, first aerobic, second anaerobic
 extern Matrix SplitRes;           // partitions decomposed material between CO2 + microbial biomass (1st column) and resistant SOM
 extern Matrix CO2;                // CO2 evolved from each layer and reservoir
 extern Matrix ProfileOutput;      // determines which vertical profiles are sent to log files

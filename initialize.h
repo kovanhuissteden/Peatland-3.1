@@ -133,6 +133,7 @@ extern Matrix BioMassRec;                 // storage of biomass, primary product
 extern Matrix NewSOM;                     // SOM reservoirs to be changed in each iteration step
 extern Matrix OldSOM;
 extern Matrix PeatDecay;                  // logs true loss of peat matrix
+extern Matrix CO2fromPeat;                        //CO2 from peat per layer, 2 x NrLayers, first aerobic, second anaerobic
 extern Matrix ProfileOutput;              // determines which vertical profiles are sent to log files
 extern ofstream *output1;                 // output log files
 extern ofstream *output2a;
